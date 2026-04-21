@@ -1,0 +1,175 @@
+.summary-container {
+  padding: 16px;
+}
+
+.loading,
+.error {
+  padding: 24px;
+  text-align: center;
+}
+
+.error {
+  color: var(--si-danger);
+}
+
+.summary-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.summary-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+
+  h3 {
+    margin: 0;
+  }
+}
+
+.date-range {
+  color: var(--si-text-secondary);
+  font-size: 13px;
+}
+
+.completion-section {
+  background: var(--si-surface);
+  border: 1px solid var(--si-border);
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: var(--si-shadow);
+}
+
+.progress-bar-bg {
+  height: 12px;
+  background: var(--si-border-light);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progress-bar {
+  height: 100%;
+  background: var(--si-success);
+  border-radius: 6px;
+  transition: width 0.5s ease;
+}
+
+.completion-stats {
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+  color: var(--si-text-secondary);
+}
+
+.percentage {
+  font-weight: 700;
+  color: var(--si-text-primary);
+}
+
+.type-section,
+.delayed-section,
+.blockers-summary {
+  background: var(--si-surface);
+  border: 1px solid var(--si-border);
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: var(--si-shadow);
+
+  h4 {
+    margin: 0 0 12px 0;
+  }
+}
+
+.type-row,
+.delayed-row,
+.blocker-row {
+  padding: 6px 0;
+  border-bottom: 1px solid var(--si-border-light);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.type-name,
+.delayed-title {
+  font-weight: 600;
+}
+
+.delayed-meta,
+.delayed-reason,
+.blocker-reason {
+  font-size: 12px;
+  color: var(--si-text-secondary);
+}
+
+.risk-velocity {
+  display: flex;
+  gap: 16px;
+}
+
+.rv-card {
+  flex: 1;
+  background: var(--si-surface);
+  border: 1px solid var(--si-border);
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: var(--si-shadow);
+  text-align: center;
+}
+
+.rv-value {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.rv-label {
+  font-size: 13px;
+  color: var(--si-text-secondary);
+  margin-top: 4px;
+}
+
+.trend {
+  &.up {
+    color: var(--si-success);
+  }
+
+  &.down {
+    color: var(--si-danger);
+  }
+}
+
+.export-section {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-base {
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  border: none;
+}
+
+.btn-primary {
+  background: var(--si-primary);
+  color: var(--si-surface);
+
+  &:hover {
+    filter: brightness(1.1);
+  }
+}
+
+.btn-secondary {
+  background: var(--si-surface-secondary);
+  color: var(--si-text-primary);
+  border: 1px solid var(--si-border);
+
+  &:hover {
+    background: var(--si-surface-hover);
+  }
+}

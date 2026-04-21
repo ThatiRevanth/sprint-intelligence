@@ -1,0 +1,46 @@
+<div class="flow-container">
+    <div class="section-header">
+        <h2>Work Item Flow Dashboard</h2>
+        <si-info-tooltip text="Shows work item distribution by state (bar chart) and aging items not updated recently. Warning: 2+ days stale. Critical: 5+ days stale."></si-info-tooltip>
+        @if (!loading()) {
+        <button class="refresh-btn" (click)="forceRefresh()" title="Refresh data">↻ Refresh</button>
+        }
+    </div>
+
+    @if (loading()) {
+    <div class="loading">Loading sprint data...</div>
+    } @else if (error()) {
+    <div class="error">{{ error() }}</div>
+    } @else {
+    <div class="flow-content">
+        <div class="chart-section">
+            <h3>Tasks by Status</h3>
+            <div class="chart-wrapper">
+                <canvas baseChart [data]="stateChartData()" [options]="stateChartOptions" type="bar">
+                </canvas>
+            </div>
+        </div>
+
+        <div class="summary-cards">
+            @for (s of stateCounts(); track s.state) {
+            <div class="card">
+                <div class="card-count">{{ s.count }}</div>
+                <div class="card-label">{{ s.state }}</div>
+                <div class="card-points">{{ s.storyPoints }} pts</div>
+            </div>
+            }
+        </div>
+
+        <div class="aging-section">
+            <h3>⚠️ Aging Work Items</h3>
+            @if (agingItems().length === 0) {
+            <div class="no-items">
+                No aging items — all tasks are being actively worked!
+            </div>
+            } @else {
+            <si-work-item-groups [groups]="agingGroups()" [defaultCollapsed]="true"></si-work-item-groups>
+            }
+        </div>
+    </div>
+    }
+</div>

@@ -1,0 +1,65 @@
+<div class="dashboard-container">
+    <header class="dashboard-header">
+        <h1>🚀 Sprint Intelligence</h1>
+        <span class="subtitle">Flow Optimizer & Risk Monitor</span>
+        <div class="header-spacer"></div>
+        <si-team-selector></si-team-selector>
+        <button class="settings-btn" (click)="toggleSettings()" title="Tab settings">
+            ⚙️
+        </button>
+    </header>
+
+    @if (settingsOpen()) {
+    <div class="settings-overlay" (click)="toggleSettings()"></div>
+    <div class="settings-panel">
+        <h3>Visible Tabs</h3>
+        @for (tab of tabs; track tab.id) {
+        <label class="settings-toggle">
+            <input type="checkbox" [checked]="isTabVisible(tab.id)" (change)="toggleTab(tab.id)">
+            <span class="toggle-slider"></span>
+            <span class="toggle-label">{{ tab.icon }} {{ tab.label }}</span>
+        </label>
+        }
+    </div>
+    }
+
+    <nav class="tab-nav">
+        @for (tab of visibleTabs(); track tab.id) {
+        <button class="tab-btn" [class.active]="activeTab() === tab.id" (click)="activeTab.set(tab.id)">
+            <span class="tab-icon">{{ tab.icon }}</span>
+            <span class="tab-label">{{ tab.label }}</span>
+        </button>
+        }
+    </nav>
+
+    <div class="tab-content">
+        @if (teamsReady()) {
+        @switch (activeTab()) {
+            @case ("standup") {
+                <si-standup></si-standup>
+            }
+            @case ("flow") {
+                <si-flow></si-flow>
+            }
+            @case ("blockers") {
+                <si-blockers></si-blockers>
+            }
+            @case ("pr") {
+                <si-pr-tracker></si-pr-tracker>
+            }
+            @case ("risk") {
+                <si-risk-score></si-risk-score>
+            }
+            @case ("workload") {
+                <si-workload></si-workload>
+            }
+            @case ("summary") {
+                <si-summary></si-summary>
+            }
+            @case ("leaves") {
+                <si-leave-tracker></si-leave-tracker>
+            }
+        }
+        }
+    </div>
+</div>

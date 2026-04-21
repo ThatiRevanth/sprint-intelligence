@@ -1,0 +1,159 @@
+/* Sprint Intelligence - Global Styles */
+/* Theme-aware: Uses Azure DevOps host CSS variables with light-mode fallbacks */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:root {
+  /* ── Core palette ─────────────────────────── */
+  --si-primary: var(--communication-background, #0078d4);
+  --si-success: #107c10;
+  --si-warning: #ff8c00;
+  --si-danger: #e81123;
+
+  /* ── Surfaces & backgrounds ───────────────── */
+  --si-bg: var(--background-color, #f5f5f5);
+  --si-surface: var(--callout-background-color, #ffffff);
+  --si-surface-hover: color-mix(in srgb, var(--text-primary-color, #333) 8%, var(--callout-background-color, #fff));
+  --si-surface-secondary: color-mix(in srgb, var(--text-primary-color, #333) 5%, var(--background-color, #f5f5f5));
+
+  /* ── Text ──────────────────────────────────── */
+  --si-text-primary: var(--text-primary-color, #333333);
+  --si-text-secondary: var(--text-secondary-color, #666666);
+  --si-text-disabled: var(--palette-neutral-30, #999999);
+
+  /* ── Borders & dividers ───────────────────── */
+  --si-border: color-mix(in srgb, var(--text-primary-color, #333) 20%, var(--background-color, #f5f5f5));
+  --si-border-light: color-mix(in srgb, var(--text-primary-color, #333) 10%, var(--background-color, #f5f5f5));
+
+  /* ── Shared tokens ────────────────────────── */
+  --si-radius: 8px;
+  --si-shadow: 0 2px 8px rgba(0, 0, 0, 0.16), 0 0 1px rgba(0, 0, 0, 0.1);
+
+  /* ── Semantic tints (subtle backgrounds) ──── */
+  --si-primary-tint: color-mix(in srgb, var(--si-primary) 12%, var(--si-surface));
+  --si-primary-tint-hover: color-mix(in srgb, var(--si-primary) 20%, var(--si-surface));
+  --si-success-tint: color-mix(in srgb, var(--si-success) 12%, var(--si-surface));
+  --si-warning-tint: color-mix(in srgb, var(--si-warning) 12%, var(--si-surface));
+  --si-danger-tint: color-mix(in srgb, var(--si-danger) 12%, var(--si-surface));
+
+  /* ── Scrollbar ────────────────────────────── */
+  --si-scrollbar: var(--palette-neutral-20, #c8c8c8);
+  --si-scrollbar-hover: var(--palette-neutral-30, #a0a0a0);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  font-size: 14px;
+  color: var(--si-text-primary);
+  background: var(--si-bg);
+  overflow: auto;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4 {
+  margin-top: 0;
+  color: var(--si-text-primary);
+}
+
+a {
+  color: var(--si-primary);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--si-scrollbar) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--si-border-light);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--si-scrollbar);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--si-scrollbar-hover);
+}
+
+/* Section header with refresh button */
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+
+  h2 {
+    margin-bottom: 0;
+  }
+}
+
+
+
+.refresh-btn {
+  padding: 4px 12px;
+  font-size: 13px;
+  border: 1px solid var(--si-border);
+  border-radius: var(--si-radius);
+  background: var(--si-surface);
+  color: var(--si-primary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: var(--si-primary-tint);
+    border-color: var(--si-primary);
+  }
+
+  &:active {
+    background: var(--si-primary-tint-hover);
+  }
+}
+
+/* Tag pill styles — shared across components */
+.tag {
+  display: inline-block;
+  padding: 2px 8px;
+  margin: 2px 4px 2px 0;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--si-primary);
+  background: var(--si-primary-tint);
+  border: 1px solid color-mix(in srgb, var(--si-primary) 30%, transparent);
+  border-radius: 12px;
+  white-space: nowrap;
+}
+
+.aging-tags,
+.blocker-tags,
+.pr-tags {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}

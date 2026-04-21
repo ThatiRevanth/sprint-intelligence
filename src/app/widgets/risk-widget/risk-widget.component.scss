@@ -1,0 +1,52 @@
+:host {
+  --si-text-secondary: var(--text-secondary-color, #888);
+  --si-text-primary: var(--text-primary-color, #333);
+  --si-bg: var(--background-color, #fff);
+}
+
+.widget {
+  padding: 12px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Segoe UI', sans-serif;
+  background: var(--si-bg);
+  color: var(--si-text-primary);
+}
+
+.widget-loading,
+.widget-empty {
+  color: var(--si-text-secondary);
+  font-size: 13px;
+}
+
+.widget-content {
+  text-align: center;
+}
+
+.gauge-mini {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin: 0 auto;
+}
+
+.gauge-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.score {
+  font-size: 32px;
+  font-weight: 800;
+}
+
+.label {
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}

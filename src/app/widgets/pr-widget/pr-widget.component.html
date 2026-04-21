@@ -1,0 +1,28 @@
+<div class="widget pr-widget">
+  @if (loading()) {
+    <div class="widget-loading">Loading...</div>
+  } @else {
+    <div class="widget-content">
+      <div class="stat-row">
+        <div class="stat">
+          <div class="stat-value">{{ agg().avgTimeToMergeHours }}h</div>
+          <div class="stat-label">Avg Merge Time</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" [style.color]="agg().stuckPRs > 0 ? dangerColor : successColor">{{ agg().stuckPRs }}</div>
+          <div class="stat-label">Stuck PRs</div>
+        </div>
+      </div>
+      <div class="stat-row">
+        <div class="stat">
+          <div class="stat-value">{{ agg().totalPRs }}</div>
+          <div class="stat-label">Total PRs</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">{{ agg().avgReworkCount }}</div>
+          <div class="stat-label">Avg Rework</div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

@@ -1,0 +1,657 @@
+/* ── Work Item Group Hierarchy ─────── */
+.item-group {
+    margin-bottom: 16px;
+    border: 1px solid var(--si-border, #e0e0e0);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--si-surface, #fff);
+    border-left: 4px solid var(--si-primary, #0078d4);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+
+    &.state-progress {
+        border-left-color: var(--si-warning, #ff8c00);
+    }
+
+    &.state-blocked {
+        border-left-color: var(--si-danger, #e81123);
+    }
+
+    &.state-new {
+        border-left-color: var(--si-primary, #0078d4);
+    }
+
+    &.orphan-group {
+        border-left-color: var(--si-text-disabled, #888);
+    }
+
+    &.border-type-story {
+        border-left-color: #0078d4;
+    }
+
+    &.border-type-bug {
+        border-left-color: #cc2635;
+    }
+
+    &.border-type-impediment {
+        border-left-color: #e81123;
+    }
+
+    &.border-type-feature {
+        border-left-color: #773b93;
+    }
+
+    &.border-type-epic {
+        border-left-color: #e97e00;
+    }
+
+    &.border-type-task {
+        border-left-color: #c4a000;
+    }
+
+    &.border-type-qa {
+        border-left-color: #c2185b;
+    }
+}
+
+.parent-header-row {
+    display: flex;
+    align-items: center;
+    background: var(--si-surface-secondary, #f7f9fc);
+    border-bottom: 1px solid var(--si-border, #e8e8e8);
+
+    .collapse-toggle {
+        margin-left: 8px;
+        flex-shrink: 0;
+    }
+}
+
+.parent-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px 10px 6px;
+    flex: 1;
+    min-width: 0;
+    font-size: 13px;
+    text-decoration: none;
+    color: inherit;
+    transition: background 0.15s;
+    border-bottom: none;
+
+    &.no-toggle {
+        padding-left: 14px;
+    }
+
+    &.parent-header-link {
+        cursor: pointer;
+
+        &:hover {
+            background: var(--si-primary-tint, #eaf2fb);
+        }
+    }
+
+    &:not(.parent-header-link) {
+        cursor: default;
+    }
+
+    &.orphan-header {
+        background: transparent;
+        cursor: default;
+
+        &:hover {
+            background: transparent;
+        }
+    }
+}
+
+.parent-type-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--si-primary, #0078d4);
+    color: #fff;
+    white-space: nowrap;
+}
+
+.parent-id {
+    color: var(--si-text-secondary, #666);
+    font-size: 12px;
+}
+
+.parent-title {
+    font-weight: 600;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.parent-state {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    background: var(--si-border-light, #eee);
+    white-space: nowrap;
+}
+
+.state-progress .parent-state {
+    background: var(--si-warning-tint, #fff3e0);
+    color: var(--si-warning, #e65100);
+}
+
+.state-blocked .parent-state {
+    background: var(--si-danger-tint, #fce4ec);
+    color: var(--si-danger, #c62828);
+}
+
+.state-new .parent-state {
+    background: var(--si-primary-tint, #e3f2fd);
+    color: var(--si-primary, #1565c0);
+}
+
+.state-done .parent-state {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.state-approved .parent-state {
+    background: #fff8e1;
+    color: #f9a825;
+}
+
+.parent-points {
+    font-weight: 600;
+    color: var(--si-text-primary, #333);
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.parent-inline-tags {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+.child-items {
+    padding: 8px 8px 4px 16px;
+}
+
+.child-item {
+    display: block;
+    margin-bottom: 6px;
+    border-radius: 6px;
+    padding: 8px 12px;
+    text-decoration: none;
+    color: inherit;
+    transition: background 0.15s;
+
+    &.child-item-link {
+        cursor: pointer;
+
+        &:hover {
+            background: var(--si-surface-hover, #f0f4f8);
+        }
+    }
+
+    &:not(.child-item-link) {
+        cursor: default;
+    }
+}
+
+.item-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    margin-bottom: 4px;
+}
+
+.item-type {
+    background: var(--si-border-light, #eee);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 500;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.item-id {
+    color: var(--si-text-secondary, #666);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.item-state {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+    font-size: 11px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.state-progress .item-state {
+    background: var(--si-warning-tint, #fff3e0);
+    color: var(--si-warning, #e65100);
+}
+
+.state-blocked .item-state {
+    background: var(--si-danger-tint, #fce4ec);
+    color: var(--si-danger, #c62828);
+}
+
+.state-new .item-state {
+    background: var(--si-primary-tint, #e3f2fd);
+    color: var(--si-primary, #1565c0);
+}
+
+.state-done .item-state {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.state-approved .item-state {
+    background: #fff8e1;
+    color: #f9a825;
+}
+
+.item-points {
+    font-weight: 600;
+    color: var(--si-text-primary, #333);
+    flex-shrink: 0;
+}
+
+.item-title {
+    flex: 1;
+    min-width: 0;
+    font-size: 13px;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.item-tags {
+    display: none; // tags now rendered inline via row-meta-group
+}
+
+.item-meta {
+    display: flex;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--si-text-disabled, #888);
+}
+
+.child-connector {
+    color: var(--si-border, #bbb);
+    font-family: monospace;
+    font-size: 13px;
+    flex-shrink: 0;
+}
+
+.no-children-note {
+    padding: 8px 14px;
+    font-size: 12px;
+    color: var(--si-text-disabled, #999);
+    font-style: italic;
+}
+
+.collapsed-hint {
+    padding: 6px 14px;
+    font-size: 12px;
+    color: var(--si-text-disabled, #999);
+    font-style: italic;
+}
+
+/* Tag pills */
+.tag {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 500;
+    background: var(--si-primary-tint, #e3f2fd);
+    color: var(--si-primary, #1565c0);
+    margin-right: 2px;
+}
+
+/* ── Inline meta group (PRs │ Tags │ State) ── */
+.row-meta-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+.meta-segment {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.meta-divider {
+    color: var(--si-border, #ccc);
+    font-size: 13px;
+    line-height: 1;
+    user-select: none;
+    opacity: 0.6;
+}
+
+/* PR badge */
+.pr-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 1px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    background: #eaf5ff;
+    color: #0366d6;
+    text-decoration: none;
+    white-space: nowrap;
+    border: 1px solid #c8e1ff;
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+    cursor: pointer;
+    position: relative;
+    z-index: 1;
+
+    &:hover {
+        background: #ddeeff;
+        border-color: #79b8ff;
+        box-shadow: 0 1px 3px rgba(3, 102, 214, 0.2);
+        text-decoration: none;
+    }
+
+    &:active {
+        background: #c8e1ff;
+    }
+}
+
+/* ── Work Item Type Colors ───────── */
+.type-story {
+    background: #0078d4 !important;
+    color: #fff !important;
+}
+
+.type-bug {
+    background: #cc2635 !important;
+    color: #fff !important;
+}
+
+.type-impediment {
+    background: #e81123 !important;
+    color: #fff !important;
+}
+
+.type-feature {
+    background: #773b93 !important;
+    color: #fff !important;
+}
+
+.type-epic {
+    background: #e97e00 !important;
+    color: #fff !important;
+}
+
+.type-task {
+    background: #c4a000 !important;
+    color: #fff !important;
+}
+
+.type-qa {
+    background: #c2185b !important;
+    color: #fff !important;
+}
+
+/* ── Hierarchy Tree Mode ────────────── */
+.hierarchy-tree {
+    border: 1px solid var(--si-border, #e0e0e0);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--si-surface, #fff);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.tree-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--si-border-light, #f0f0f0);
+    transition: background 0.15s;
+
+    &:last-child {
+        border-bottom: none;
+    }
+
+    &.tree-active {
+        background: var(--si-surface-secondary, #fafafa);
+    }
+
+    &:hover {
+        background: var(--si-surface-hover, #f0f4f8);
+    }
+}
+
+.collapse-toggle {
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: none;
+    color: var(--si-text-secondary, #666);
+    cursor: pointer;
+    font-size: 11px;
+    border-radius: 4px;
+    flex-shrink: 0;
+
+    &:hover {
+        background: var(--si-border-light, #eee);
+        color: var(--si-text-primary, #333);
+    }
+}
+
+.tree-connector {
+    color: var(--si-border, #bbb);
+    font-family: monospace;
+    font-size: 13px;
+    flex-shrink: 0;
+    width: 22px;
+    text-align: center;
+}
+
+.tree-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+    text-decoration: none;
+    color: inherit;
+
+    &.tree-item-link {
+        cursor: pointer;
+
+        &:hover .tree-title {
+            text-decoration: underline;
+        }
+    }
+}
+
+.tree-type-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--si-border-light, #eee);
+    color: var(--si-text-secondary, #555);
+    white-space: nowrap;
+    flex-shrink: 0;
+
+    &.tree-type-active {
+        background: var(--si-primary, #0078d4);
+        color: #fff;
+    }
+}
+
+.tree-id {
+    color: var(--si-text-secondary, #666);
+    font-size: 12px;
+    flex-shrink: 0;
+}
+
+.tree-title {
+    font-weight: 500;
+    font-size: 13px;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tree-active .tree-title {
+    font-weight: 600;
+}
+
+.tree-state {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    background: var(--si-border-light, #eee);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.state-progress .tree-state {
+    background: var(--si-warning-tint, #fff3e0);
+    color: var(--si-warning, #e65100);
+}
+
+.state-blocked .tree-state {
+    background: var(--si-danger-tint, #fce4ec);
+    color: var(--si-danger, #c62828);
+}
+
+.state-new .tree-state {
+    background: var(--si-primary-tint, #e3f2fd);
+    color: var(--si-primary, #1565c0);
+}
+
+.state-done .tree-state {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.state-approved .tree-state {
+    background: #fff8e1;
+    color: #f9a825;
+}
+
+.tree-points {
+    font-weight: 600;
+    color: var(--si-text-primary, #333);
+    font-size: 12px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* ── Status Mismatch Badge ─────── */
+.status-mismatch-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    background: #ff5722;
+    color: #fff;
+    cursor: help;
+    animation: mismatch-pulse 2s ease-in-out infinite;
+}
+
+@keyframes mismatch-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.75; }
+}
+
+.tree-meta {
+    display: none; // PR info now rendered inline via row-meta-group
+}
+
+/* ── QA Item Rows (pink theme) ─────── */
+.qa-item-row {
+    background: rgba(236, 72, 153, 0.04);
+    border-left: 3px solid #ec4899;
+
+    &:hover {
+        background: rgba(236, 72, 153, 0.08) !important;
+    }
+}
+
+.qa-connector {
+    color: #ec4899 !important;
+}
+
+.qa-type-badge {
+    background: linear-gradient(135deg, #ec4899, #db2777) !important;
+    color: #fff !important;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
+
+.qa-id {
+    color: #be185d;
+}
+
+.qa-title {
+    color: var(--si-text-primary, #333);
+    font-weight: 500;
+}
+
+.qa-tag {
+    background: rgba(236, 72, 153, 0.12) !important;
+    color: #be185d !important;
+    border: 1px solid rgba(236, 72, 153, 0.25);
+}
+
+.qa-assignee-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+    background: rgba(236, 72, 153, 0.1);
+    color: #be185d;
+    border: 1px solid rgba(236, 72, 153, 0.25);
+
+    &.qa-unassigned {
+        background: rgba(236, 72, 153, 0.06);
+        color: #9d174d;
+        border-style: dashed;
+    }
+}
+
+.qa-assignee-icon {
+    font-size: 12px;
+}

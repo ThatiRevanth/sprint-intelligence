@@ -1,0 +1,86 @@
+<div class="summary-container">
+  <div class="section-header">
+    <h2>📝 Sprint Summary</h2>
+    <si-info-tooltip text="Overview of sprint progress: completion percentage, items by type, delayed items (not yet done), risk score, velocity trend, and top blockers."></si-info-tooltip>
+    @if (!loading()) {
+    <button class="refresh-btn" (click)="forceRefresh()" title="Refresh data">↻ Refresh</button>
+    }
+  </div>
+
+  @if (loading()) {
+    <div class="loading">Generating sprint summary...</div>
+  } @else if (error()) {
+    <div class="error">{{ error() }}</div>
+  } @else if (summary()) {
+    <div class="summary-content">
+      <div class="summary-header">
+        <div class="summary-title">
+          <h3>{{ summary()!.sprintName }}</h3>
+          <span class="date-range">
+            {{ summary()!.startDate | date:'mediumDate' }} — {{ summary()!.endDate | date:'mediumDate' }}
+          </span>
+        </div>
+        <div class="export-section">
+          <button class="btn-base btn-primary" (click)="copyToClipboard()">📋 Copy as Markdown</button>
+          <button class="btn-base btn-secondary" (click)="downloadHtml()">💾 Download HTML Report</button>
+        </div>
+      </div>
+      <div class="completion-section">
+        <div class="progress-bar-bg">
+          <div class="progress-bar" [style.width.%]="summary()!.completionPercentage"></div>
+        </div>
+        <div class="completion-stats">
+          <span>{{ summary()!.completedItems }}/{{ summary()!.totalItems }} items completed</span>
+          <span class="percentage">{{ summary()!.completionPercentage }}%</span>
+        </div>
+      </div>
+
+      <div class="type-section">
+        <h4>✅ Completed Work</h4>
+        @for (t of summary()!.completedByType; track t.type) {
+          <div class="type-row">
+            <span class="type-name">{{ t.type }}</span>
+            <span>{{ t.count }} items</span>
+          </div>
+        }
+      </div>
+
+      @if (summary()!.delayedItems.length > 0) {
+        <div class="delayed-section">
+          <h4>⏳ Delayed / Carried Over</h4>
+          <si-work-item-groups [groups]="delayedGroups()" [defaultCollapsed]="true"></si-work-item-groups>
+        </div>
+      }
+
+      @if (summary()!.topBlockers.length > 0) {
+        <div class="blockers-summary">
+          <h4>🚫 Key Blockers ({{ summary()!.totalBlockers }})</h4>
+          @for (b of summary()!.topBlockers; track b.title) {
+            <div class="blocker-row">
+              <span>{{ b.title }}</span>
+              <span class="blocker-reason">{{ b.reason }} · {{ b.daysSinceUpdate }}d stale</span>
+            </div>
+          }
+        </div>
+      }
+
+      <div class="risk-velocity">
+        <div class="rv-card">
+          <div class="rv-value" [style.color]="getRiskColor()">{{ summary()!.riskLevel }}</div>
+          <div class="rv-label">Risk Score: {{ summary()!.riskScore }}/100</div>
+        </div>
+        <div class="rv-card">
+          <div class="rv-value">{{ summary()!.currentVelocity }} items</div>
+          <div class="rv-label">
+            Velocity (avg: {{ summary()!.avgPastVelocity }} items)
+            @switch (summary()!.velocityTrend) {
+              @case ('improving') { <span class="trend up">↑</span> }
+              @case ('declining') { <span class="trend down">↓</span> }
+              @case ('stable') { <span class="trend">→</span> }
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

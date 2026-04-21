@@ -1,0 +1,18 @@
+<div class="widget blockers-widget">
+  @if (loading()) {
+    <div class="widget-loading">Loading...</div>
+  } @else {
+    <div class="widget-content">
+      <div class="count" [style.color]="blockers().length > 0 ? dangerColor : successColor">{{ blockers().length }}</div>
+      <div class="count-label">Blockers</div>
+      <div class="top-list">
+        @for (b of topBlockers(); track b.id) {
+          <div class="mini-blocker" [style.border-left-color]="getSeverityColor(b.severity)">
+            <div class="mini-title">{{ b.title }}</div>
+            <div class="mini-meta">{{ b.assignedTo }} · {{ b.daysSinceUpdate }}d</div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>

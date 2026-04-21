@@ -1,0 +1,232 @@
+.team-selector {
+  position: relative;
+  z-index: 50;
+
+  &.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+}
+
+/* ── Trigger button ─────────────────────────── */
+.team-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 16px;
+  border: 1.5px solid var(--si-primary);
+  border-radius: 20px;
+  background: var(--si-primary-tint);
+  color: var(--si-text-primary);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  max-width: 280px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+
+  &:hover {
+    background: var(--si-primary-tint-hover);
+    box-shadow: 0 0 0 3px var(--si-primary-tint), 0 2px 8px rgba(0, 0, 0, 0.12);
+  }
+
+  &.skeleton {
+    width: 160px;
+    height: 36px;
+    overflow: hidden;
+    pointer-events: none;
+    border-color: var(--si-border);
+    background: var(--si-surface);
+  }
+}
+
+.team-icon {
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.team-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--si-primary);
+}
+
+.chevron {
+  font-size: 11px;
+  margin-left: auto;
+  transition: transform 0.2s ease;
+  color: var(--si-primary);
+
+  &.flipped {
+    transform: rotate(180deg);
+  }
+}
+
+/* ── Skeleton shimmer ───────────────────────── */
+.shimmer {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    var(--si-surface-secondary) 25%,
+    var(--si-surface) 50%,
+    var(--si-surface-secondary) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 16px;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Dropdown panel ─────────────────────────── */
+.dropdown-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 280px;
+  max-width: 340px;
+  background: var(--si-surface);
+  border: 1px solid var(--si-border);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18), 0 0 1px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  animation: dropIn 0.15s ease-out;
+}
+
+@keyframes dropIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ── Search ─────────────────────────────────── */
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--si-border-light);
+
+  .search-icon {
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+
+  input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 13px;
+    color: var(--si-text-primary);
+
+    &::placeholder {
+      color: var(--si-text-disabled);
+    }
+  }
+}
+
+/* ── Team list ──────────────────────────────── */
+.team-list {
+  max-height: 280px;
+  overflow-y: auto;
+  padding: 4px;
+
+  &::-webkit-scrollbar {
+    width: 5px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--si-scrollbar);
+    border-radius: 5px;
+  }
+}
+
+.team-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--si-text-primary);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s ease;
+
+  &:hover {
+    background: var(--si-surface-hover);
+  }
+
+  &.active {
+    background: var(--si-primary-tint);
+
+    .option-name {
+      color: var(--si-primary);
+      font-weight: 600;
+    }
+  }
+}
+
+.option-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--si-primary-tint);
+  color: var(--si-primary);
+  font-weight: 700;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.option-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.option-name {
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.option-desc {
+  font-size: 11px;
+  color: var(--si-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.check-mark {
+  color: var(--si-primary);
+  font-weight: 700;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.no-results {
+  padding: 16px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--si-text-disabled);
+}

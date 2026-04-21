@@ -1,0 +1,15 @@
+<div class="widget workload-widget">
+  @if (loading()) {
+    <div class="widget-loading">Loading...</div>
+  } @else {
+    <div class="widget-content">
+      <div class="chart-mini">
+        <canvas baseChart [data]="chartData()" [options]="chartOptions" type="bar"></canvas>
+      </div>
+      <div class="legend">
+        <span class="overloaded-count">{{ overloaded() }} overloaded</span>
+        <span class="under-count">{{ light() }} light</span>
+      </div>
+    </div>
+  }
+</div>

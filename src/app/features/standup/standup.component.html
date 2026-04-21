@@ -1,0 +1,265 @@
+<div class="standup-container">
+<div class="section-header">
+    <h2>📞 Daily Standup</h2>
+    <si-info-tooltip text="Team members grouped by role. Shows active work items per person with full Feature → PBI → Task hierarchy. Configure team groups and visibility via ⚙️ Teams."></si-info-tooltip>
+    <span class="sprint-badge">{{ sprintName() }}</span>
+    <span class="date-badge">📅 {{ today() | date:'fullDate' }}</span>
+    <div class="header-actions">
+        @if (!loading() && presenterMode()) {
+        <button class="refresh-btn" (click)="refreshInPlace()" title="Refresh data">↻ Refresh</button>
+        <button class="btn-secondary btn-sm" (click)="exitPresenter()">✕ Exit Standup</button>
+        }
+        @if (!loading() && !presenterMode()) {
+        <button class="config-btn" (click)="toggleConfig()" title="Configure teams">⚙️ Configure</button>
+        <button class="refresh-btn" (click)="forceRefresh()" title="Refresh data">↻ Refresh</button>
+        }
+    </div>
+</div>
+@if (loading()) {
+<div class="loading">Loading standup data...</div>
+} @else if (error()) {
+<div class="error">{{ error() }}</div>
+} @else if (configMode()) {
+<!-- Team Configuration Panel -->
+<div class="config-panel">
+    <div class="config-tabs">
+        <button class="config-tab" [class.active]="configTab() === 'members'" (click)="configTab.set('members')">👥 Team Members</button>
+        <button class="config-tab" [class.active]="configTab() === 'groups'" (click)="configTab.set('groups')">📂 Groups</button>
+        <button class="config-tab" [class.active]="configTab() === 'mapping'" (click)="configTab.set('mapping')">🔗 Code Base Project Mapping</button>
+    </div>
+
+    @if (configTab() === 'members') {
+    <!-- Tab: Team Members -->
+    <div class="config-tab-content">
+        <p class="config-hint">Toggle visibility, assign groups, and set regions for public holidays.</p>
+        <div class="config-list">
+            @for (m of teamMembers(); track m.name) {
+            <div class="config-row" [class.config-hidden]="!m.visible">
+                <label class="config-toggle" title="Show in standup">
+                    <input type="checkbox" [checked]="m.visible" (change)="toggleMemberVisibility(m.name)">
+                    <span class="toggle-slider"></span>
+                </label>
+                <span class="config-name">{{ m.name }}</span>
+                <div class="config-controls">
+                    <div class="config-groups">
+                        @for (g of groupOrder(); track g) {
+                        <button class="group-btn" [class.active]="m.group === g" (click)="setMemberGroup(m.name, g)">
+                        {{ getGroupIcon(g) }} {{ g }}
+                        </button>
+                        }
+                    </div>
+                    @if (leaveConfig().regions.length > 0) {
+                    <select class="region-select" (change)="setMemberRegion(m.name, $any($event.target).value)" title="Holiday region">
+                        <option value="" [selected]="!m.region">🌍 No region</option>
+                        @for (r of leaveConfig().regions; track r) {
+                        <option [value]="r" [selected]="m.region === r">🌍 {{ r }}</option>
+                        }
+                    </select>
+                    }
+                </div>
+            </div>
+            }
+        </div>
+    </div>
+    } @else if (configTab() === 'groups') {
+    <!-- Tab: Groups -->
+    <div class="config-tab-content">
+        <div class="config-bottom">
+            <div class="config-section-half">
+                <div class="config-section-header">
+                    <h4>📂 Custom Groups</h4>
+                </div>
+                <div class="custom-groups-list">
+                    @for (cg of customGroups(); track cg.key) {
+                    <span class="custom-group-tag">
+                        {{ cg.icon }} {{ cg.label }}
+                        <button class="remove-group-btn" (click)="removeCustomGroup(cg.key)" title="Remove group">✕</button>
+                    </span>
+                    }
+                    @if (customGroups().length === 0) {
+                    <span class="config-empty">No custom groups</span>
+                    }
+                </div>
+                <div class="add-group-row">
+                    <input class="form-input-sm" type="text" placeholder="New group name..."
+                        [value]="newGroupName()" (input)="newGroupName.set($any($event.target).value)"
+                        (keydown.enter)="addCustomGroup()" maxlength="20">
+                    <button class="btn-secondary btn-sm" (click)="addCustomGroup()" [disabled]="!newGroupName().trim()">+ Add</button>
+                </div>
+            </div>
+
+            <div class="config-section-half">
+                <div class="config-section-header">
+                    <h4>📋 Group Order</h4>
+                </div>
+                <div class="group-order-list">
+                    @for (g of groupOrder(); track g; let i = $index; let first = $first; let last = $last) {
+                    <div class="group-order-row">
+                        <span class="group-order-pos">{{ i + 1 }}</span>
+                        <span class="group-order-label">{{ getGroupIcon(g) }} {{ getGroupLabel(g) }}</span>
+                        <div class="group-order-actions">
+                            <button class="order-btn" (click)="moveGroupUp(g)" [disabled]="first" title="Move up">▲</button>
+                            <button class="order-btn" (click)="moveGroupDown(g)" [disabled]="last" title="Move down">▼</button>
+                        </div>
+                    </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+    } @else if (configTab() === 'mapping') {
+    <!-- Tab: Code Project Mapping -->
+    <div class="config-tab-content">
+        <p class="config-hint">If your repos/PRs live in a different Azure DevOps project, select it here so PR links point to the correct project.</p>
+        <div class="code-project-list">
+            @for (p of codeProjectMappings(); track p) {
+            <span class="code-project-tag">
+                Current Project has its code base in the Project 📁 {{ p }}
+                <button class="remove-group-btn" (click)="removeCodeProject(p)" title="Remove project">✕</button>
+            </span>
+            }
+            @if (codeProjectMappings().length === 0) {
+            <span class="config-empty">No mappings — repos are assumed to be in the current project</span>
+            }
+        </div>
+        @if(codeProjectMappings().length == 0){
+            <div class="add-group-row">
+                <select class="form-select-sm" (change)="newCodeProject.set($any($event.target).value)">
+                    <option value="" selected disabled>Select a project...</option>
+                    @for (proj of availableProjects(); track proj.id) {
+                    <option [value]="proj.name" [disabled]="codeProjectMappings().includes(proj.name)">{{ proj.name }}</option>
+                    }
+                </select>
+                <button class="btn-secondary btn-sm" (click)="addCodeProject()" [disabled]="!newCodeProject()">+ Add</button>
+            </div>
+        }
+    </div>
+    }
+
+    <div class="config-actions">
+        <button class="btn-primary" (click)="saveConfig()">💾 Save & Reload</button>
+        <button class="btn-secondary" (click)="toggleConfig()">Cancel</button>
+    </div>
+</div>
+} @else if (!presenterMode()) {
+<!-- Overview Mode: all members grouped -->
+<div class="overview-mode">
+    <div class="start-section">
+        <button class="start-btn" (click)="startStandup()">
+        ▶️ Start Daily
+        </button>
+        <span class="start-hint">{{ standupMembers().length }} team members</span>
+    </div>
+    <div class="team-overview">
+        @for (group of groupOrder(); track group) {
+        @if (getMembersInGroup(group).length > 0) {
+        <div class="group-section">
+            <h3 class="group-header">{{ getGroupIcon(group) }} {{ getGroupLabel(group) }}</h3>
+            <div class="member-cards">
+                @for (m of getMembersInGroup(group); track m.name; let i = $index) {
+                <div class="member-card-mini" [class.on-leave]="isMemberOnLeave(m.name)" [class.on-holiday]="getMemberTodayHolidays(m.name).length > 0" (click)="goToMember(getMemberIndex(m.name))">
+                    <div class="member-name-mini">
+                        {{ m.name }}
+                        @if (isMemberOnLeave(m.name)) {
+                        <span class="leave-badge-mini">🏖️ {{ getLeaveStatus(m.name) }}</span>
+                        } @else if (getMemberTodayHolidays(m.name).length > 0) {
+                        <span class="holiday-badge-mini">🎉 {{ getMemberTodayHolidays(m.name)[0].name }}</span>
+                        } @else if (getNearLeaves(m.name).length > 0) {
+                        <span class="leave-upcoming-mini">🗓️ Leave: {{ formatLeave(getNearLeaves(m.name)[0]) }}</span>
+                        }
+                    </div>
+                    <div class="member-count-mini">
+                        @if (leafItemCount(m.activeItems) > 0) {
+                        {{ leafItemCount(m.activeItems) }} active item{{ leafItemCount(m.activeItems) > 1 ? 's' : '' }}
+                        } @else {
+                            <span class="no-items">No active items</span>
+                        }
+                        @if (leafItemCount(m.allItems) - leafItemCount(m.activeItems) > 0) {
+                        <span class="completed-count-mini">✅ {{ leafItemCount(m.allItems) - leafItemCount(m.activeItems) }} done</span>
+                        }
+                    </div>
+                </div>
+                }
+            </div>
+        </div>
+        }
+        }
+    </div>
+</div>
+} @else {
+<!-- Presenter Mode: one person at a time -->
+<div class="presenter-mode">
+    <div class="presenter-controls">
+        <button class="nav-btn" (click)="prev()" [disabled]="currentIndex() === 0" title="Previous (←)">
+        ← Prev
+        </button>
+        <div class="progress-indicator">
+            <span class="progress-text">{{ progressText() }}</span>
+            <div class="progress-dots">
+                @for (m of standupMembers(); track m.name; let i = $index) {
+                <span class="dot" [class.active]="i === currentIndex()" [class.visited]="i < currentIndex()" (click)="goToMember(i)" [title]="m.name">
+                </span>
+                }
+            </div>
+        </div>
+        <button class="nav-btn" (click)="next()" [disabled]="currentIndex() >= standupMembers().length - 1"
+        title="Next (→ or Space)">
+        Next →
+        </button>
+    </div>
+    @if (currentMember()) {
+    @if (getMemberTodayHolidays(currentMember()!.name).length > 0) {
+    <div class="holiday-banner">
+        @for (h of getMemberTodayHolidays(currentMember()!.name); track h.date + h.region) {
+        <span>🎉 Today is a Public Holiday in {{ h.region }} — {{ h.name }}</span>
+        }
+    </div>
+    }
+    <div class="presenter-card">
+        <div class="presenter-header">
+            <div class="presenter-avatar">
+                @if (currentMember()!.imageUrl) {
+                <img [src]="currentMember()!.imageUrl" [alt]="currentMember()!.name" class="avatar-img" />
+                } @else {
+                {{ currentMember()!.name.charAt(0) }}
+                }
+            </div>
+            <div class="presenter-info">
+                <h3 class="presenter-name">{{ currentMember()!.name }}</h3>
+                <span class="presenter-group">{{ getGroupIcon(currentMember()!.group) }} {{
+                getGroupLabel(currentMember()!.group) }}</span>
+            </div>
+            @if (isMemberOnLeave(currentMember()!.name)) {
+            <div class="presenter-leave-info">
+                <span class="leave-badge">🏖️ {{ getLeaveStatus(currentMember()!.name) }}</span>
+                @if (getBackOnDate(currentMember()!.name)) {
+                <span class="leave-back-date">📅 {{ getBackOnDate(currentMember()!.name) }}</span>
+                }
+            </div>
+            } @else if (getNearLeaves(currentMember()!.name).length > 0) {
+            <div class="presenter-leave-info">
+                <span class="leave-info-header">Upcoming Leave</span>
+                @for (l of getNearLeaves(currentMember()!.name); track l.startDate) {
+                <span class="leave-tag">🗓️ {{ formatLeave(l) }} ({{ l.days }}d)</span>
+                }
+            </div>
+            }
+        </div>
+        @if (currentMember()!.itemGroups.length === 0) {
+        <div class="no-active-items">
+            <div class="empty-icon">✅</div>
+            <div class="empty-text">No items in this sprint</div>
+        </div>
+        } @else {
+        <div class="active-items">
+            <h4>Work Items ({{ leafItemCount(currentMember()!.activeItems) }} active)</h4>
+            <si-work-item-groups [groups]="currentMember()!.itemGroups" [hierarchy]="currentMember()!.hierarchy"></si-work-item-groups>
+        </div>
+        }
+        <div class="presenter-footer">
+            <span class="keyboard-hint">← → Space to navigate · Esc to exit</span>
+        </div>
+    </div>
+    }
+</div>
+}

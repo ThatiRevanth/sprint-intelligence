@@ -1,0 +1,87 @@
+<div class="risk-container">
+    <div class="section-header">
+        <h2>🧠 Sprint Risk Score</h2>
+        <si-info-tooltip text="Weighted risk score (0–100). Factors: Completion Progress (35%) — done items vs elapsed time. Time Balance (25%) — remaining items vs remaining time. Blockers (25%) — blocker ratio penalty. Velocity Trend (15%) — completed items vs past sprint average. Score: 70+ = Low risk, 40–70 = Medium, <40 = High."></si-info-tooltip>
+        <si-info-modal title="How Risk Score Works">
+            <h4>How is the Risk Score calculated?</h4>
+            <p>The sprint risk score is a <strong>health score from 0 to 100</strong>. A higher score means the sprint is healthier. It's based on <strong>work item counts</strong> (not story points) and is a weighted average of four factors:</p>
+            <table>
+                <thead><tr><th>Factor</th><th>Weight</th><th>What it measures</th></tr></thead>
+                <tbody>
+                    <tr><td><strong>Completion Progress</strong></td><td>35%</td><td>Percentage of items done vs how much time has passed. If 50% of time is gone but only 20% of items are done, this score drops.</td></tr>
+                    <tr><td><strong>Time Balance</strong></td><td>25%</td><td>Whether remaining time is enough for remaining items. Penalizes when many items are left but little time remains.</td></tr>
+                    <tr><td><strong>Blockers</strong></td><td>25%</td><td>Ratio of blocked/stale items to total items. More blockers = lower score.</td></tr>
+                    <tr><td><strong>Velocity Trend</strong></td><td>15%</td><td>Compares current sprint's completed item count to the average of the past 3 sprints.</td></tr>
+                </tbody>
+            </table>
+            <h4>Risk Levels</h4>
+            <p>
+                <span class="score-badge badge-green">70–100 On Track</span>&nbsp;
+                <span class="score-badge badge-yellow">40–69 At Risk</span>&nbsp;
+                <span class="score-badge badge-red">0–39 Likely to Slip</span>
+            </p>
+            <h4>Example</h4>
+            <p>Mid-sprint: 50% time elapsed, 6 of 20 items done (30%), 2 blockers, velocity matches past average.</p>
+            <table>
+                <thead><tr><th>Factor</th><th>Score</th><th>Weighted</th></tr></thead>
+                <tbody>
+                    <tr><td>Completion (6/20 done ÷ 50% time)</td><td>60</td><td>60 × 0.35 = 21.0</td></tr>
+                    <tr><td>Time Balance</td><td>71</td><td>71 × 0.25 = 17.8</td></tr>
+                    <tr><td>Blockers (2/20)</td><td>80</td><td>80 × 0.25 = 20.0</td></tr>
+                    <tr><td>Velocity Trend</td><td>100</td><td>100 × 0.15 = 15.0</td></tr>
+                </tbody>
+            </table>
+            <p><strong>Total: 74</strong> → <span class="score-badge badge-green">On Track</span></p>
+            <h4>Tips</h4>
+            <p>• The score updates in real time as work items change state.<br>
+            • "Blockers" include stale items (not updated in 2+ days), blocked dependencies, and pending PRs.<br>
+            • Velocity compares completed item count from the last 3 sprints as baseline.</p>
+        </si-info-modal>
+        @if (!loading()) {
+        <button class="refresh-btn" (click)="forceRefresh()" title="Refresh data">↻ Refresh</button>
+        }
+    </div>
+
+    @if (loading()) {
+    <div class="loading">Calculating risk score...</div>
+    } @else if (error()) {
+    <div class="error">{{ error() }}</div>
+    } @else if (risk()) {
+    <div class="risk-content">
+        <div class="gauge-section">
+            <div class="gauge-wrapper">
+                <canvas baseChart [data]="gaugeData()" [options]="gaugeOptions" type="doughnut">
+                </canvas>
+                <div class="gauge-center">
+                    <div class="gauge-score" [style.color]="risk()!.color">
+                        {{ risk()!.score }}
+                    </div>
+                    <div class="gauge-label">{{ risk()!.label }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="factors-section">
+            <h3>Score Breakdown</h3>
+            @for (f of risk()!.factors; track f.name) {
+            <div class="factor-row">
+                <div class="factor-header">
+                    <span class="factor-name">{{ f.name }}</span>
+                    <span class="factor-score">{{ f.score }}/100</span>
+                    <span class="factor-weight">({{ f.weight * 100 }}%)</span>
+                </div>
+                <div class="factor-bar-bg">
+                    <div class="factor-bar" [style.width.%]="f.score" [style.background]="getFactorColor(f.score)">
+                    </div>
+                </div>
+                <div class="factor-desc">{{ f.description }}</div>
+            </div>
+            }
+        </div>
+    </div>
+    } @else {
+    <div class="no-data">
+        No active sprint data available for risk calculation.
+    </div>
+    }
+</div>

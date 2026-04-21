@@ -1,0 +1,204 @@
+@if (hierarchy.length > 0) {
+<!-- ── Tree hierarchy mode (Feature → PBI → Task) ── -->
+<div class="hierarchy-tree">
+    @for (row of flattenTree(); track getRowTrackId(row)) {
+    @if (row.qaItem) {
+    <!-- QA sibling item row -->
+    <div class="tree-row qa-item-row" [class]="getStateClass(row.qaItem.state)"
+        [style.padding-left.px]="row.depth * 24">
+        <span class="tree-connector qa-connector">└─</span>
+        <a class="tree-item qa-tree-item" [attr.href]="row.qaItem.url || null" target="_blank"
+            rel="noopener noreferrer">
+            <span class="tree-type-badge qa-type-badge">🧪 QA</span>
+            <span class="tree-id qa-id">#{{ row.qaItem.id }}</span>
+            <span class="tree-title qa-title">{{ row.qaItem.title }}</span>
+            <span class="row-meta-group">
+                @if (row.qaItem.tags.length > 0) {
+                <span class="meta-segment">
+                    @for (tag of row.qaItem.tags; track tag) {
+                    <span class="tag qa-tag">{{ tag }}</span>
+                    }
+                </span>
+                <span class="meta-divider">│</span>
+                }
+                <span class="qa-assignee-badge"
+                    [class.qa-unassigned]="!row.qaItem.assignedTo || row.qaItem.assignedTo === 'Unassigned'">
+                    @if (row.qaItem.assignedTo && row.qaItem.assignedTo !== 'Unassigned' && (row.qaItem.state === 'To
+                    Do')) {
+                    <span class="qa-assignee-icon">⚠️</span>
+                    } @else if (row.qaItem.assignedTo && row.qaItem.assignedTo !== 'Unassigned') {
+                    <span class="qa-assignee-icon">👤</span>
+                    } @else if (row.qaItem.state === 'Test') {
+                    <span class="qa-assignee-icon">⏳</span>
+                    } @else {
+                    <span class="qa-assignee-icon">📋</span>
+                    }
+                    {{ getQaAssigneeLabel(row.qaItem) }}
+                </span>
+                <span class="meta-divider">│</span>
+                <span class="tree-state">{{ row.qaItem.state }}</span>
+            </span>
+        </a>
+    </div>
+    } @else {
+    <div class="tree-row" [class.tree-active]="row.node.isActiveItem" [class]="getStateClass(row.node.item.state)"
+        [style.padding-left.px]="row.depth * 24">
+        @if (row.hasChildren) {
+        <button class="collapse-toggle" (click)="toggleCollapse(row.node.item.id)"
+            [title]="isCollapsed(row.node.item.id) ? 'Expand' : 'Collapse'">
+            {{ isCollapsed(row.node.item.id) ? '▶' : '▼' }}
+        </button>
+        } @else {
+        <span class="tree-connector">└─</span>
+        }
+        <div class="tree-item" [class.tree-item-link]="!!row.node.item.url"
+            (click)="openLink(row.node.item.url, $event)" (keydown.enter)="openLink(row.node.item.url, $event)"
+            [attr.tabindex]="row.node.item.url ? 0 : null" role="link">
+            <span class="tree-type-badge" [class]="getTypeClass(row.node.item.workItemType)"
+                [class.tree-type-active]="row.node.isActiveItem">{{
+                row.node.item.workItemType }}</span>
+            <span class="tree-id">#{{ row.node.item.id }}</span>
+            <span class="tree-title">{{ row.node.item.title }}</span>
+            @if (row.mismatchTooltip) {
+                <si-info-tooltip [text]="row.mismatchTooltip" trigger="hover"><span class="status-mismatch-badge">⚠ Status Mismatch</span></si-info-tooltip>
+            }
+            <span class="row-meta-group">
+                @if (!row.hasChildren && row.node.item.linkedPrs && row.node.item.linkedPrs.length > 0) {
+                <span class="meta-segment">
+                    @for (pr of row.node.item.linkedPrs; track pr.id) {
+                    <a class="pr-badge" [attr.href]="getPrUrl(pr, row.node.item.url)" target="_blank"
+                        rel="noopener noreferrer" (click)="onPrClick($event)" title="Pull Request #{{ pr.id }}">⎇ PR #{{
+                        pr.id }}</a>
+                    }
+                </span>
+                <span class="meta-divider">│</span>
+                }
+                @if (row.node.item.tags && row.node.item.tags.length > 0) {
+                <span class="meta-segment">
+                    @for (tag of row.node.item.tags; track tag) {
+                    <span class="tag">{{ tag }}</span>
+                    }
+                </span>
+                <span class="meta-divider">│</span>
+                }
+                <span class="tree-state">{{ row.node.item.state }}</span>
+            </span>
+            @if (row.node.item.storyPoints > 0) {
+            <span class="tree-points">{{ row.node.item.storyPoints }} pts</span>
+            }
+        </div>
+    </div>
+    }
+    }
+</div>
+} @else {
+<!-- ── Flat groups mode (parent → children) ── -->
+@for (group of groups; track $index; let gi = $index) {
+<div class="item-group"
+    [class]="(group.parent ? getStateClass(group.parent.state) : 'orphan-group') + ' border-' + (group.parent ? getTypeClass(group.parent.workItemType) : '')">
+    @if (group.parent) {
+    <div class="parent-header-row">
+        @if (group.children.length > 0) {
+        <button class="collapse-toggle" (click)="toggleGroupCollapse(gi)"
+            [title]="isGroupCollapsed(gi) ? 'Expand' : 'Collapse'">
+            {{ isGroupCollapsed(gi) ? '▶' : '▼' }}
+        </button>
+        }
+        <div class="parent-header" [class.no-toggle]="group.children.length === 0"
+            [class.parent-header-link]="!!group.parent.url" (click)="openLink(group.parent.url, $event)"
+            (keydown.enter)="openLink(group.parent.url, $event)" [attr.tabindex]="group.parent.url ? 0 : null"
+            role="link">
+            <span class="parent-type-badge" [class]="getTypeClass(group.parent.workItemType)">{{
+                group.parent.workItemType }}</span>
+            <span class="parent-id">#{{ group.parent.id }}</span>
+            <span class="parent-title">{{ group.parent.title }}</span>
+            <span class="row-meta-group">
+                @if (group.children.length === 0 && group.parent.linkedPrs && group.parent.linkedPrs.length > 0) {
+                <span class="meta-segment">
+                    @for (pr of group.parent.linkedPrs; track pr.id) {
+                    <a class="pr-badge" [attr.href]="getPrUrl(pr, group.parent.url)" target="_blank"
+                        rel="noopener noreferrer" (click)="onPrClick($event)" title="Pull Request #{{ pr.id }}">⎇ PR #{{
+                        pr.id }}</a>
+                    }
+                </span>
+                <span class="meta-divider">│</span>
+                }
+                @if (group.parent.tags && group.parent.tags.length > 0) {
+                <span class="meta-segment">
+                    @for (tag of group.parent.tags; track tag) {
+                    <span class="tag">{{ tag }}</span>
+                    }
+                </span>
+                <span class="meta-divider">│</span>
+                }
+                <span class="parent-state">{{ group.parent.state }}</span>
+            </span>
+            @if (group.parent.storyPoints > 0) {
+            <span class="parent-points">{{ group.parent.storyPoints }} pts</span>
+            }
+        </div>
+    </div>
+    } @else {
+    <div class="parent-header-row">
+        @if (group.children.length > 0) {
+        <button class="collapse-toggle" (click)="toggleGroupCollapse(gi)"
+            [title]="isGroupCollapsed(gi) ? 'Expand' : 'Collapse'">
+            {{ isGroupCollapsed(gi) ? '▶' : '▼' }}
+        </button>
+        }
+        <div class="parent-header orphan-header" [class.no-toggle]="group.children.length === 0">
+            <span class="parent-type-badge">Standalone</span>
+            <span class="parent-title">Tasks (no parent)</span>
+        </div>
+    </div>
+    }
+
+    @if (group.children.length > 0 && !isGroupCollapsed(gi)) {
+    <div class="child-items">
+        @for (item of group.children; track item.id) {
+        <div class="child-item" [class.child-item-link]="!!item.url" [class]="getStateClass(item.state)"
+            (click)="openLink(item.url, $event)" (keydown.enter)="openLink(item.url, $event)"
+            [attr.tabindex]="item.url ? 0 : null" role="link">
+            <div class="item-header">
+                <span class="child-connector">└─</span>
+                <span class="item-type" [class]="getTypeClass(item.workItemType)">{{ item.workItemType }}</span>
+                <span class="item-id">#{{ item.id }}</span>
+                <div class="item-title">{{ item.title }}</div>
+                <span class="row-meta-group">
+                    @if (item.linkedPrs && item.linkedPrs.length > 0) {
+                    <span class="meta-segment">
+                        @for (pr of item.linkedPrs; track pr.id) {
+                        <a class="pr-badge" [attr.href]="getPrUrl(pr, item.url)" target="_blank"
+                            rel="noopener noreferrer" (click)="onPrClick($event)" title="Pull Request #{{ pr.id }}">⎇ PR
+                            #{{ pr.id }}</a>
+                        }
+                    </span>
+                    <span class="meta-divider">│</span>
+                    }
+                    @if (item.tags && item.tags.length > 0) {
+                    <span class="meta-segment">
+                        @for (tag of item.tags; track tag) {
+                        <span class="tag">{{ tag }}</span>
+                        }
+                    </span>
+                    <span class="meta-divider">│</span>
+                    }
+                    <span class="item-state">{{ item.state }}</span>
+                </span>
+                <span class="item-points">{{ item.storyPoints }} pts</span>
+            </div>
+            <div class="item-meta">
+                <span class="item-aging">📅 {{ item.agingDays }}d since update</span>
+            </div>
+        </div>
+        }
+    </div>
+    } @else if (group.children.length === 0) {
+    <div class="no-children-note">↑ Direct work item (no child tasks)</div>
+    } @else {
+    <div class="collapsed-hint">{{ group.children.length }} child item{{ group.children.length > 1 ? 's' : '' }} hidden
+    </div>
+    }
+</div>
+}
+}

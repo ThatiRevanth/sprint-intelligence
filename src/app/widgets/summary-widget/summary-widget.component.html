@@ -1,0 +1,31 @@
+<div class="widget summary-widget">
+  @if (loading()) {
+    <div class="widget-loading">Loading...</div>
+  } @else {
+    <div class="widget-content">
+      <div class="sprint-name">{{ sprintName() }}</div>
+      <div class="stats-grid">
+        <div class="stat-item">
+          <span class="val">{{ completed() }}</span>
+          <span class="lbl">Done</span>
+        </div>
+        <div class="stat-item">
+          <span class="val">{{ inProgress() }}</span>
+          <span class="lbl">Active</span>
+        </div>
+        <div class="stat-item">
+          <span class="val">{{ remaining() }}</span>
+          <span class="lbl">To Do</span>
+        </div>
+        <div class="stat-item">
+          <span class="val" [style.color]="riskColor()">{{ riskScore() }}</span>
+          <span class="lbl">Risk</span>
+        </div>
+      </div>
+      <div class="progress-mini">
+        <div class="bar" [style.width.%]="completionPct()" [style.background]="riskColor()"></div>
+      </div>
+      <div class="pct">{{ completionPct() }}% complete</div>
+    </div>
+  }
+</div>

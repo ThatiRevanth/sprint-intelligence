@@ -1,0 +1,50 @@
+<div class="team-selector" [class.open]="open()" [class.disabled]="disabled()">
+  @if (loading()) {
+    <div class="team-trigger skeleton">
+      <span class="shimmer"></span>
+    </div>
+  } @else {
+    <button class="team-trigger" [disabled]="disabled()" (click)="toggle()" [title]="disabled() ? 'Close config panel to switch teams' : (selected()?.name ?? 'Select team')">
+      <span class="team-icon">👥</span>
+      <span class="team-name">{{ selected()?.name ?? 'No team' }}</span>
+      <span class="chevron" [class.flipped]="open()">▾</span>
+    </button>
+  }
+
+  @if (open()) {
+    <div class="dropdown-panel">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input
+          type="text"
+          placeholder="Search teams..."
+          [value]="search()"
+          (input)="search.set($any($event.target).value)"
+          autofocus
+        />
+      </div>
+      <div class="team-list">
+        @for (team of filteredTeams(); track team.id) {
+          <button
+            class="team-option"
+            [class.active]="team.id === selected()?.id"
+            (click)="pick(team)"
+          >
+            <span class="option-avatar">{{ team.name.charAt(0).toUpperCase() }}</span>
+            <div class="option-info">
+              <span class="option-name">{{ team.name }}</span>
+              @if (team.description) {
+                <span class="option-desc">{{ team.description }}</span>
+              }
+            </div>
+            @if (team.id === selected()?.id) {
+              <span class="check-mark">✓</span>
+            }
+          </button>
+        } @empty {
+          <div class="no-results">No teams found</div>
+        }
+      </div>
+    </div>
+  }
+</div>

@@ -1,0 +1,49 @@
+:host {
+  --si-text-primary: var(--text-primary-color, #333);
+  --si-text-disabled: var(--palette-neutral-30, #888);
+  --si-danger: #e81123;
+  --si-bg: var(--background-color, #fff);
+}
+
+.widget {
+  padding: 8px;
+  height: 100%;
+  font-family: 'Segoe UI', sans-serif;
+  display: flex;
+  flex-direction: column;
+  background: var(--si-bg);
+  color: var(--si-text-primary);
+}
+
+.widget-loading {
+  color: var(--si-text-disabled);
+  font-size: 13px;
+  text-align: center;
+  padding-top: 20px;
+}
+
+.widget-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-mini {
+  flex: 1;
+}
+
+.legend {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  padding: 4px;
+}
+
+.overloaded-count {
+  color: var(--si-danger);
+  font-weight: 600;
+}
+
+.under-count {
+  color: var(--si-text-disabled);
+}

@@ -1,0 +1,235 @@
+<div class="leave-container">
+    <si-confirm-dialog #confirmDialog></si-confirm-dialog>
+
+    <div class="section-header">
+        <h2>🏖️ Leave Tracker</h2>
+        <si-info-tooltip text="Track team member leaves and public holidays. Leave days exclude weekends and configured public holidays. Add regions for multi-country teams."></si-info-tooltip>
+        <div class="header-actions">
+            <button class="btn-secondary btn-sm" [class.active]="holidayMode()" (click)="toggleHolidayMode()">
+                🌍 Public Holidays
+            </button>
+        </div>
+    </div>
+
+    @if (loading()) {
+    <div class="loading">Loading leave data...</div>
+    } @else if (error()) {
+    <div class="error">{{ error() }}</div>
+    } @else if (holidayMode()) {
+    <!-- Public Holidays Management -->
+    <div class="holidays-content">
+        <div class="back-nav">
+            <button class="btn-secondary btn-sm" (click)="toggleHolidayMode()">← Back to Leaves</button>
+        </div>
+
+        <!-- Region management card -->
+        <div class="holiday-card">
+            <div class="holiday-card-header">
+                <h3>🌍 Manage Regions</h3>
+                <p class="config-hint">Add regions for your multi-country team. Holidays are grouped by region and excluded from leave day calculations.</p>
+            </div>
+            <div class="region-tags">
+                @for (r of configuredRegions; track r) {
+                <span class="region-tag">
+                    {{ getRegionLabel(r) }}
+                    <button class="remove-btn-sm" (click)="removeRegion(r)" title="Remove region and its holidays">✕</button>
+                </span>
+                }
+                @if (configuredRegions.length === 0) {
+                <span class="empty-hint">No regions configured yet</span>
+                }
+            </div>
+            <div class="add-row">
+                <input class="form-input" type="text" placeholder="Enter region name..." [value]="newRegion()"
+                    (input)="newRegion.set($any($event.target).value)" (keydown.enter)="addRegion()" maxlength="30">
+                <button class="btn-primary btn-sm" (click)="addRegion()" [disabled]="!newRegion().trim()">+ Add Region</button>
+            </div>
+        </div>
+
+        <!-- Add holiday form card -->
+        @if (configuredRegions.length > 0) {
+        <div class="holiday-card">
+            <div class="holiday-card-header">
+                <h3>📅 Add Holiday</h3>
+            </div>
+            <div class="form-row">
+                <select class="form-select" [value]="holidayRegion()" (change)="holidayRegion.set($any($event.target).value)">
+                    <option value="">Select region...</option>
+                    @for (r of configuredRegions; track r) {
+                    <option [value]="r">{{ getRegionLabel(r) }}</option>
+                    }
+                </select>
+                <input class="form-input" type="date" [value]="holidayDate()" (input)="holidayDate.set($any($event.target).value)">
+                <input class="form-input flex-input" type="text" placeholder="Holiday name" [value]="holidayName()"
+                    (input)="holidayName.set($any($event.target).value)" (keydown.enter)="addHoliday()" maxlength="50">
+                <button class="btn-primary btn-sm" (click)="addHoliday()"
+                    [disabled]="!holidayRegion() || !holidayDate() || !holidayName().trim()">+ Add Holiday</button>
+            </div>
+        </div>
+        }
+
+        <!-- Holidays list by region - grid cards -->
+        @if (configuredRegions.length > 0) {
+        <div class="member-leave-grid">
+            @for (r of configuredRegions; track r) {
+            <div class="member-card region-card">
+                <div class="member-card-top">
+                    <span class="member-avatar region-avatar">🌍</span>
+                    <div class="member-info">
+                        <div class="member-name-row">
+                            <span class="member-name">{{ r }}</span>
+                        </div>
+                        <span class="member-leave-summary">
+                            @if ((holidaysByRegion().get(r) ?? []).length > 0) {
+                                {{ (holidaysByRegion().get(r) ?? []).length }} holiday{{ (holidaysByRegion().get(r) ?? []).length !== 1 ? 's' : '' }}
+                            } @else {
+                                No holidays added
+                            }
+                        </span>
+                    </div>
+                    <button class="remove-btn-sm" (click)="removeRegion(r)" title="Remove region and its holidays">✕</button>
+                    @if ((holidaysByRegion().get(r) ?? []).length > 0) {
+                    <button class="btn-expand" (click)="toggleRegionExpand(r)"
+                        [class.expanded]="expandedRegions().has(r)"
+                        [title]="expandedRegions().has(r) ? 'Hide holidays' : 'Show holidays'">
+                        ▸
+                    </button>
+                    }
+                </div>
+                @if (expandedRegions().has(r) && (holidaysByRegion().get(r) ?? []).length > 0) {
+                <div class="member-card-leaves">
+                    @for (h of holidaysByRegion().get(r); track h.date) {
+                    <div class="leave-entry">
+                        <div class="leave-entry-main">
+                            <span class="leave-dates">📅 {{ formatHolidayDate(h.date) }}</span>
+                            <span class="holiday-entry-name">{{ h.name }}</span>
+                        </div>
+                        <button class="remove-btn-sm" (click)="removeHoliday(h.date, h.region)" title="Remove">✕</button>
+                    </div>
+                    }
+                </div>
+                }
+            </div>
+            }
+        </div>
+        }
+    </div>
+    } @else {
+    <!-- Leave Management -->
+    <div class="leave-content">
+        <!-- Summary stats -->
+        <div class="summary-cards">
+            <div class="stat-card">
+                <span class="stat-count">{{ teamMemberNames().length }}</span>
+                <span class="stat-label">Team Members</span>
+            </div>
+            <div class="stat-card on-leave">
+                <span class="stat-count">{{ totalOnLeave() }}</span>
+                <span class="stat-label">On Leave</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-count">{{ totalUpcomingLeaves() }}</span>
+                <span class="stat-label">Upcoming Leaves</span>
+            </div>
+        </div>
+
+        <!-- Add Leave form -->
+        <div class="leave-form">
+            <h3>Add Your Leave</h3>
+            <div class="form-row">
+                <div class="current-user-label">
+                    <span class="current-user-avatar">{{ currentUserName().charAt(0) }}</span>
+                    <span class="current-user-name">{{ currentUserName() }}</span>
+                </div>
+                <label class="form-label">
+                    <span>From</span>
+                    <input class="form-input" type="date" [min]="todayStr" [value]="leaveStart()"
+                        (input)="leaveStart.set($any($event.target).value)">
+                </label>
+                <label class="form-label">
+                    <span>To</span>
+                    <input class="form-input" type="date" [min]="leaveStart() || todayStr" [value]="leaveEnd()"
+                        (input)="leaveEnd.set($any($event.target).value)">
+                </label>
+                <input class="form-input note-input" type="text" placeholder="Note (optional)" [value]="leaveNote()"
+                    (input)="leaveNote.set($any($event.target).value)" maxlength="60">
+                <button class="btn-primary btn-sm" (click)="addLeave()"
+                    [disabled]="!currentUserName() || !leaveStart() || isWeekendOnly()">
+                    + Add Leave
+                </button>
+                @if (isWeekendOnly()) {
+                <span class="weekend-hint">⚠ Selected date is a weekend</span>
+                }
+            </div>
+        </div>
+
+        <!-- Search bar -->
+        <div class="search-bar">
+            <span class="search-icon">🔍</span>
+            <input class="search-input" type="text" placeholder="Search team members..."
+                [value]="searchQuery()" (input)="searchQuery.set($any($event.target).value)">
+        </div>
+
+        <!-- Member leave cards -->
+        <div class="member-leave-grid">
+            @for (ml of filteredMemberLeaves(); track ml.name) {
+            <div class="member-card" [class.own-card]="isOwnLeave(ml.name)" [class.on-leave-today]="isMemberOnLeaveToday(ml.name)">
+                <div class="member-card-top">
+                    @if (ml.imageUrl) {
+                    <img class="member-avatar avatar-img" [src]="ml.imageUrl" [alt]="ml.name">
+                    } @else {
+                    <span class="member-avatar">{{ ml.name.charAt(0) }}</span>
+                    }
+                    <div class="member-info">
+                        <div class="member-name-row">
+                            <span class="member-name">{{ ml.name }}</span>
+                            @if (isOwnLeave(ml.name)) {
+                            <span class="you-badge">You</span>
+                            }
+                            @if (isMemberOnLeaveToday(ml.name)) {
+                            <span class="today-badge">On Leave</span>
+                            }
+                        </div>
+                        <span class="member-leave-summary">
+                            @if (ml.upcoming.length > 0) {
+                                {{ ml.upcoming.length }} upcoming leave{{ ml.upcoming.length !== 1 ? 's' : '' }}
+                            } @else {
+                                No upcoming leaves
+                            }
+                        </span>
+                    </div>
+                    @if (ml.upcoming.length > 0) {
+                    <button class="btn-expand" (click)="toggleMemberExpand(ml.name)"
+                        [class.expanded]="expandedMembers().has(ml.name)"
+                        [title]="expandedMembers().has(ml.name) ? 'Hide details' : 'Show details'">
+                        ▸
+                    </button>
+                    }
+                </div>
+                @if (expandedMembers().has(ml.name) && ml.upcoming.length > 0) {
+                <div class="member-card-leaves">
+                    @for (l of ml.upcoming; track l.startDate) {
+                    <div class="leave-entry">
+                        <div class="leave-entry-main">
+                            <span class="leave-dates">📅 {{ formatRange(l) }}</span>
+                            <span class="leave-days">{{ getLeaveDays(l) }}d</span>
+                        </div>
+                        @if (l.note) {
+                        <span class="leave-note">{{ l.note }}</span>
+                        }
+                        @if (isOwnLeave(l.memberName)) {
+                        <button class="remove-btn-sm" (click)="removeLeave(l.memberName, l.startDate)" title="Remove leave">✕</button>
+                        }
+                    </div>
+                    }
+                </div>
+                }
+            </div>
+            }
+            @if (filteredMemberLeaves().length === 0 && searchQuery()) {
+                <div class="no-results">No members matching "{{ searchQuery() }}"</div>
+            }
+        </div>
+    </div>
+    }
+</div>

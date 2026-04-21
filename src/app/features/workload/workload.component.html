@@ -1,0 +1,95 @@
+<div class="workload-container">
+  <div class="section-header">
+    <h2>👥 Workload Balancer</h2>
+    <si-info-tooltip text="Shows task distribution per team member. Load status: Light (<50% avg), Balanced (50–100%), Heavy (100–150%), Overloaded (>150%). Rebalance suggestions trigger when a member has >120% of group avg and another has <80%. Only Tasks are counted, grouped by team group from standup config."></si-info-tooltip>
+    @if (!loading()) {
+    <button class="refresh-btn" (click)="forceRefresh()" title="Refresh data">↻ Refresh</button>
+    }
+  </div>
+
+  @if (loading()) {
+    <div class="loading">Analyzing workload distribution...</div>
+  } @else if (error()) {
+    <div class="error">{{ error() }}</div>
+  } @else {
+    <div class="workload-content">
+      <div class="chart-section">
+        <h3>Work Items per Developer — Remaining vs Completed</h3>
+        <div class="chart-legend">
+          <div class="legend-item">
+            <span class="legend-color" style="background: var(--si-primary)"></span>
+            <span>Light (&lt;50% avg)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-color" style="background: var(--si-success)"></span>
+            <span>Balanced (50–100%)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-color" style="background: var(--si-warning)"></span>
+            <span>Heavy (100–150%)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-color" style="background: var(--si-danger)"></span>
+            <span>Overloaded (&gt;150%)</span>
+          </div>
+          <div class="legend-separator"></div>
+          <div class="legend-item">
+            <span class="legend-color completed-swatch"></span>
+            <span>Completed</span>
+          </div>
+        </div>
+        <div class="chart-wrapper">
+          <canvas baseChart
+            [data]="workloadChartData()"
+            [options]="workloadChartOptions"
+            type="bar">
+          </canvas>
+        </div>
+      </div>
+
+      <!-- <div class="members-section">
+        <h3>Work Status per Developer</h3>
+        <div class="members-table">
+          <div class="member-row header">
+            <span>Developer</span>
+            <span>Group</span>
+            <span>Total</span>
+            <span>Done</span>
+            <span>Remaining</span>
+            <span>Load</span>
+            <span>Status</span>
+          </div>
+          @for (m of members(); track m.name) {
+            <div class="member-row" [class]="m.loadStatus">
+              <span class="member-name">{{ m.name }}</span>
+              <span>{{ m.group ?? '—' }}</span>
+              <span>{{ m.assignedItems }}</span>
+              <span>{{ m.completedItems }}</span>
+              <span>{{ m.remainingItems }}</span>
+              <span>{{ (m.loadRatio * 100).toFixed(0) }}%</span>
+              <span class="status-badge" [style.color]="getColor(m.loadStatus)">
+                {{ m.loadStatus.toUpperCase() }}
+              </span>
+            </div>
+          }
+        </div>
+      </div>-->
+
+      @if (suggestions().length > 0) {
+        <div class="suggestions-section">
+          <h3>💡 Rebalance Suggestions</h3>
+          @for (s of suggestions(); track s.fromMember + s.toMember) {
+            <div class="suggestion-card">
+              <div class="suggestion-text">{{ s.reason }}</div>
+              <div class="suggestion-detail">
+                Move ~{{ s.suggestedItems }} item(s) from <strong>{{ s.fromMember }}</strong>
+                to <strong>{{ s.toMember }}</strong>
+              </div>
+            </div>
+          }
+        </div>
+      } 
+      
+    </div>
+  }
+</div>

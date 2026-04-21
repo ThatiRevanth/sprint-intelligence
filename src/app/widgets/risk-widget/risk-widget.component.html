@@ -1,0 +1,17 @@
+<div class="widget risk-widget">
+  @if (loading()) {
+    <div class="widget-loading">Loading...</div>
+  } @else if (risk()) {
+    <div class="widget-content">
+      <div class="gauge-mini">
+        <canvas baseChart [data]="gaugeData()" [options]="gaugeOptions" type="doughnut"></canvas>
+        <div class="gauge-overlay">
+          <div class="score" [style.color]="risk()!.color">{{ risk()!.score }}</div>
+        </div>
+      </div>
+      <div class="label">{{ risk()!.label }}</div>
+    </div>
+  } @else {
+    <div class="widget-empty">No data</div>
+  }
+</div>

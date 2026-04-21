@@ -1,0 +1,54 @@
+:host {
+  --si-text-primary: var(--text-primary-color, #333);
+  --si-text-disabled: var(--palette-neutral-30, #888);
+  --si-bg: var(--background-color, #fff);
+  --si-surface-secondary: color-mix(in srgb, var(--text-primary-color, #333) 5%, var(--background-color, #fff));
+}
+
+.widget {
+  padding: 12px;
+  height: 100%;
+  font-family: 'Segoe UI', sans-serif;
+  background: var(--si-bg);
+  color: var(--si-text-primary);
+}
+
+.widget-loading {
+  color: var(--si-text-disabled);
+  font-size: 13px;
+  text-align: center;
+  padding-top: 20px;
+}
+
+.widget-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  justify-content: center;
+  height: 100%;
+}
+
+.stat-row {
+  display: flex;
+  gap: 8px;
+}
+
+.stat {
+  flex: 1;
+  text-align: center;
+  padding: 8px;
+  background: var(--si-surface-secondary);
+  border-radius: 4px;
+}
+
+.stat-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--si-text-primary);
+}
+
+.stat-label {
+  font-size: 10px;
+  color: var(--si-text-disabled);
+  text-transform: uppercase;
+}

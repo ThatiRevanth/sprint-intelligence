@@ -1,0 +1,137 @@
+.flow-container {
+    padding: 16px;
+}
+
+.loading,
+.error {
+    padding: 24px;
+    text-align: center;
+}
+
+.error {
+    color: var(--si-danger);
+}
+
+.flow-content {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.chart-section {
+    background: var(--si-surface);
+    border: 1px solid var(--si-border);
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: var(--si-shadow);
+}
+
+.chart-wrapper {
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.summary-cards {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.card {
+    background: var(--si-surface);
+    border: 1px solid var(--si-border);
+    border-radius: 8px;
+    padding: 16px 24px;
+    box-shadow: var(--si-shadow);
+    text-align: center;
+    min-width: 120px;
+    flex: 1;
+}
+
+.card-count {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--si-text-primary);
+}
+
+.card-label {
+    font-size: 14px;
+    color: var(--si-text-secondary);
+    margin-top: 4px;
+}
+
+.card-points {
+    font-size: 12px;
+    color: var(--si-text-disabled);
+    margin-top: 2px;
+}
+
+.aging-section {
+    background: var(--si-surface);
+    border: 1px solid var(--si-border);
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: var(--si-shadow);
+}
+
+.no-items {
+    padding: 12px;
+    color: var(--si-success);
+}
+
+.aging-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.aging-item {
+    padding: 12px;
+    border-radius: 6px;
+    border-left: 4px solid var(--si-border);
+    background: var(--si-surface-secondary);
+
+    &.warning {
+        border-left-color: var(--si-warning);
+        background: var(--si-warning-tint);
+
+        .aging-days {
+            color: var(--si-warning);
+        }
+    }
+
+    &.critical {
+        border-left-color: var(--si-danger);
+        background: var(--si-danger-tint);
+
+        .aging-days {
+            color: var(--si-danger);
+        }
+    }
+}
+
+.aging-header {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    font-size: 12px;
+    color: var(--si-text-disabled);
+}
+
+.aging-days {
+    margin-left: auto;
+    font-weight: 600;
+}
+
+.aging-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 4px 0;
+}
+
+.aging-meta {
+    display: flex;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--si-text-secondary);
+}

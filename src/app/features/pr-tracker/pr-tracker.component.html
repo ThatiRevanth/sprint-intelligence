@@ -1,0 +1,125 @@
+<div class="pr-container">
+    <div class="section-header">
+        <h2>🔄 PR Cycle Time Tracker</h2>
+        <si-info-tooltip text="Tracks pull requests created during the sprint across all repos. Shows active vs completed PRs, average cycle time (creation to merge), reviewer workload, and stuck PRs (active > 3 days)."></si-info-tooltip>
+        @if (projects().length > 1) {
+        <select class="project-selector" [value]="selectedProjectId()" (change)="onProjectChange($any($event.target).value)">
+            @for (p of projects(); track p.id) {
+            <option [value]="p.id">{{ p.name }}{{ p.id === currentProjectId() ? ' (current)' : '' }}</option>
+            }
+        </select>
+        }
+        @if (!loading()) {
+        <button class="refresh-btn" (click)="forceRefresh()" title="Refresh data">↻ Refresh</button>
+        }
+    </div>
+
+    @if (loading()) {
+    <div class="loading">Loading PR data...</div>
+    } @else if (error()) {
+    <div class="error">{{ error() }}</div>
+    } @else {
+    <div class="pr-content">
+        <div class="summary-cards">
+            <div class="card">
+                <div class="card-count">{{ aggregate().totalPRs }}</div>
+                <div class="card-label">Total PRs</div>
+            </div>
+            <div class="card">
+                <div class="card-count">{{ aggregate().avgTimeToMergeHours }}h</div>
+                <div class="card-label">Avg Time to Merge</div>
+            </div>
+            <div class="card">
+                <div class="card-count">{{ aggregate().avgTimeToFirstReviewHours }}h</div>
+                <div class="card-label">Avg Time to Review</div>
+            </div>
+            <div class="card stuck">
+                <div class="card-count">{{ aggregate().stuckPRs }}</div>
+                <div class="card-label">PRs Stuck > 2 Days</div>
+            </div>
+            <div class="card">
+                <div class="card-count">{{ aggregate().avgReworkCount }}</div>
+                <div class="card-label">Avg Rework Cycles</div>
+            </div>
+        </div>
+
+        <div class="chart-section">
+            <h3>Cycle Time Distribution (hours)</h3>
+            <div class="chart-wrapper">
+                <canvas baseChart [data]="cycleChartData()" [options]="cycleChartOptions" type="bar">
+                </canvas>
+            </div>
+        </div>
+
+        <div class="reviewer-section">
+            <h3>Avg Review Time per Reviewer</h3>
+            <table class="reviewer-table">
+                <thead>
+                    <tr>
+                        <th>Reviewer</th>
+                        <th>Reviews</th>
+                        <th>Avg Time (h)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (r of reviewerStats(); track r.name) {
+                    <tr>
+                        <td class="reviewer-name">{{ r.name }}</td>
+                        <td>{{ r.reviewCount }}</td>
+                        <td>{{ r.avgReviewTimeHours }}h</td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pr-table-section">
+            <h3>Pull Requests</h3>
+            <table class="pr-table">
+                <thead>
+                    <tr>
+                        <th>PR</th>
+                        <th>Repo</th>
+                        <th>Author</th>
+                        <th>Status</th>
+                        <th>Tags</th>
+                        <th>Created</th>
+                        <th>Time to Merge</th>
+                        <th>Rework</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (pr of prs(); track pr.id) {
+                    <tr [class.stuck]="pr.isStuck">
+                        <td class="pr-title">
+                            @if (pr.url) {
+                            <a [href]="pr.url" target="_blank">{{ pr.title }}</a>
+                            } @else {
+                            {{ pr.title }}
+                            }
+                        </td>
+                        <td>{{ pr.repositoryName }}</td>
+                        <td>{{ pr.authorName }}</td>
+                        <td><span class="status-badge" [class]="pr.status">{{ pr.status }}</span></td>
+                        <td>
+                            @if (pr.tags.length > 0) {
+                            <div class="pr-tags">
+                                @for (tag of pr.tags; track tag) {
+                                <span class="tag">{{ tag }}</span>
+                                }
+                            </div>
+                            } @else {
+                            —
+                            }
+                        </td>
+                        <td>{{ pr.creationDate | date:'shortDate' }}</td>
+                        <td>{{ pr.timeToMergeHours ? pr.timeToMergeHours + 'h' : '—' }}</td>
+                        <td>{{ pr.reworkCount }}</td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    }
+</div>

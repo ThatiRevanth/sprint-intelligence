@@ -1,0 +1,49 @@
+<div class="blockers-container">
+  <div class="section-header">
+    <h2>⚠️ Smart Blocker Detection</h2>
+    <si-info-tooltip text="Detects 3 types of blockers: (1) Stale items — not updated for 2+ days (low), 4+ days (medium), 6+ days (high). (2) Blocked dependencies — predecessor items not yet completed (always high). (3) Pending PRs — in-progress items with unmerged linked PRs."></si-info-tooltip>
+    @if (!loading()) {
+    <button class="refresh-btn" (click)="forceRefresh()" title="Refresh data">↻ Refresh</button>
+    }
+  </div>
+
+  @if (loading()) {
+    <div class="loading">Scanning for blockers...</div>
+  } @else if (error()) {
+    <div class="error">{{ error() }}</div>
+  } @else {
+    <div class="blockers-content">
+      <div class="summary-bar">
+        <div class="summary-item high" [class.active-filter]="severityFilter() === 'high'" (click)="toggleSeverityFilter('high')">
+          <span class="count">{{ highCount() }}</span>
+          <span class="label">High</span>
+        </div>
+        <div class="summary-item medium" [class.active-filter]="severityFilter() === 'medium'" (click)="toggleSeverityFilter('medium')">
+          <span class="count">{{ mediumCount() }}</span>
+          <span class="label">Medium</span>
+        </div>
+        <div class="summary-item low" [class.active-filter]="severityFilter() === 'low'" (click)="toggleSeverityFilter('low')">
+          <span class="count">{{ lowCount() }}</span>
+          <span class="label">Low</span>
+        </div>
+        <div class="summary-item total" [class.active-filter]="severityFilter() === null" (click)="clearFilter()">
+          <span class="count">{{ blockers().length }}</span>
+          <span class="label">Total</span>
+        </div>
+      </div>
+
+      @if (severityFilter()) {
+      <div class="filter-indicator">
+        Showing <strong>{{ severityFilter() }}</strong> severity blockers
+        <button class="clear-filter" (click)="clearFilter()">✕ Clear filter</button>
+      </div>
+      }
+
+      @if (blockers().length === 0) {
+        <div class="no-blockers">✅ No blockers detected — sprint is flowing smoothly!</div>
+      } @else {
+      <si-work-item-groups [groups]="filteredGroups()" [defaultCollapsed]="true"></si-work-item-groups>
+      }
+    </div>
+  }
+</div>

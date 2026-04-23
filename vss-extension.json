@@ -7,9 +7,15 @@
   "publisher": "Revanth",
   "public": true,
   "links": {
-    "license": "https://github.com/ThatiRevanth/sprint-intelligence/blob/main/LICENSE",
-    "privacy": "https://github.com/ThatiRevanth/sprint-intelligence/blob/main/Privacy.md",
-    "support": "https://github.com/ThatiRevanth/sprint-intelligence/blob/main/Support.md"
+    "license": {
+      "uri": "https://github.com/ThatiRevanth/sprint-intelligence/blob/main/LICENSE"
+    },
+    "privacy": {
+      "uri": "https://github.com/ThatiRevanth/sprint-intelligence/blob/main/Privacy.md"
+    },
+    "support": {
+      "uri": "https://github.com/ThatiRevanth/sprint-intelligence/blob/main/Support.md"
+    }
   },
   "categories": [
     "Azure Boards"

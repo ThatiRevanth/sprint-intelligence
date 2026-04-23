@@ -6,6 +6,11 @@
   "description": "Unified sprint health dashboard with blocker detection, PR cycle tracking, risk scoring, workload balancing, and auto-generated sprint summaries.",
   "publisher": "Revanth",
   "public": true,
+  "links": {
+    "license": "https://github.com/ThatiRevanth/sprint-intelligence/blob/main/LICENSE",
+    "privacy": "https://github.com/ThatiRevanth/sprint-intelligence/blob/main/Privacy.md",
+    "support": "https://github.com/ThatiRevanth/sprint-intelligence/blob/main/Support.md"
+  },
   "categories": [
     "Azure Boards"
   ],

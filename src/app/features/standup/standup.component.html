@@ -4,6 +4,15 @@
     <si-info-tooltip text="Team members grouped by role. Shows active work items per person with full Feature → PBI → Task hierarchy. Configure team groups and visibility via ⚙️ Teams."></si-info-tooltip>
     <span class="sprint-badge">{{ sprintName() }}</span>
     <span class="date-badge">📅 {{ today() | date:'fullDate' }}</span>
+    @if (timerRunning()) {
+    <div class="standup-timer-inline" [class.timer-green]="timerColor() === 'green'" [class.timer-yellow]="timerColor() === 'yellow'" [class.timer-red]="timerColor() === 'red'">
+        <span class="timer-label-inline">⏱️</span>
+        <div class="timer-bar-track-inline">
+            <div class="timer-bar-fill" [style.width.%]="timerProgress() * 100"></div>
+        </div>
+        <span class="timer-display-inline" [class.timer-overtime]="timerRemainingSec() < 0">{{ timerDisplay() }}</span>
+    </div>
+    }
     <div class="header-actions">
         @if (!loading() && presenterMode()) {
         <button class="refresh-btn" (click)="refreshInPlace()" title="Refresh data">↻ Refresh</button>
@@ -26,6 +35,7 @@
         <button class="config-tab" [class.active]="configTab() === 'members'" (click)="configTab.set('members')">👥 Team Members</button>
         <button class="config-tab" [class.active]="configTab() === 'groups'" (click)="configTab.set('groups')">📂 Groups</button>
         <button class="config-tab" [class.active]="configTab() === 'mapping'" (click)="configTab.set('mapping')">🔗 Code Base Project Mapping</button>
+        <button class="config-tab" [class.active]="configTab() === 'timer'" (click)="configTab.set('timer')">⏱️ Standup Timer</button>
     </div>
 
     @if (configTab() === 'members') {
@@ -136,6 +146,23 @@
     </div>
     }
 
+    @if (configTab() === 'timer') {
+    <!-- Tab: Standup Timer -->
+    <div class="config-tab-content">
+        <p class="config-hint">Set how long the daily standup should last. A countdown timer will be shown during the standup.</p>
+        <div class="duration-picker">
+            <label class="duration-label">Standup Duration</label>
+            <div class="duration-options">
+                @for (d of durationOptions; track d) {
+                <button class="duration-btn" [class.active]="standupDuration() === d" (click)="standupDuration.set(d)">
+                    {{ d }} min
+                </button>
+                }
+            </div>
+        </div>
+    </div>
+    }
+
     <div class="config-actions">
         <button class="btn-primary" (click)="saveConfig()">💾 Save & Reload</button>
         <button class="btn-secondary" (click)="toggleConfig()">Cancel</button>
@@ -207,6 +234,7 @@
         Next →
         </button>
     </div>
+
     @if (currentMember()) {
     @if (getMemberTodayHolidays(currentMember()!.name).length > 0) {
     <div class="holiday-banner">
@@ -261,5 +289,9 @@
         </div>
     </div>
     }
+
 </div>
 }
+
+<si-confirm-dialog #exitDialog></si-confirm-dialog>
+</div>

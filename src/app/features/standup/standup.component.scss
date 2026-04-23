@@ -43,6 +43,65 @@
     gap: 8px;
 }
 
+/* ── Inline Timer (in header) ─────── */
+.standup-timer-inline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 2px 12px;
+    border-radius: 16px;
+    border: 1px solid var(--si-border);
+    background: var(--si-surface);
+    flex: 1;
+    min-width: 0;
+    height: 28px;
+    transition: border-color 0.3s, background 0.3s;
+}
+
+.timer-label-inline {
+    font-size: 13px;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.timer-bar-track-inline {
+    flex: 1;
+    height: 5px;
+    background: var(--si-border-light, #e0e0e0);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.timer-display-inline {
+    font-size: 13px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    min-width: 40px;
+    text-align: right;
+    line-height: 1;
+}
+
+.timer-green.standup-timer-inline {
+    border-color: color-mix(in srgb, #28a745 40%, transparent);
+    .timer-bar-fill { background: #28a745; }
+    .timer-display-inline { color: #28a745; }
+}
+
+.timer-yellow.standup-timer-inline {
+    border-color: color-mix(in srgb, #ffc107 50%, transparent);
+    background: color-mix(in srgb, #ffc107 5%, var(--si-surface));
+    .timer-bar-fill { background: #ffc107; }
+    .timer-display-inline { color: #e6a700; }
+}
+
+.timer-red.standup-timer-inline {
+    border-color: color-mix(in srgb, #e81123 40%, transparent);
+    background: color-mix(in srgb, #e81123 5%, var(--si-surface));
+    .timer-bar-fill { background: #e81123; }
+    .timer-display-inline { color: #e81123; }
+}
+
 .config-btn {
     padding: 4px 12px;
     font-size: 13px;
@@ -835,4 +894,138 @@
 .keyboard-hint {
     font-size: 12px;
     color: var(--si-text-disabled);
+}
+
+/* ── Duration Picker (Config Tab) ─── */
+.duration-picker {
+    margin-top: 16px;
+}
+
+.duration-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--si-text-primary);
+    margin-bottom: 10px;
+}
+
+.duration-options {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.duration-btn {
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    border: 2px solid var(--si-border);
+    border-radius: 8px;
+    background: var(--si-surface);
+    color: var(--si-text-primary);
+    cursor: pointer;
+    transition: all 0.15s;
+    min-width: 80px;
+
+    &:hover {
+        border-color: var(--si-primary);
+        color: var(--si-primary);
+    }
+
+    &.active {
+        background: var(--si-primary);
+        color: var(--si-surface);
+        border-color: var(--si-primary);
+    }
+}
+
+/* ── Standup Timer ────────────────── */
+.standup-timer {
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--si-border);
+    background: var(--si-surface);
+    transition: border-color 0.3s, background 0.3s;
+}
+
+.timer-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.timer-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--si-text-secondary);
+}
+
+.timer-display {
+    font-size: 22px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--si-text-primary);
+}
+
+.timer-overtime {
+    color: var(--si-danger, #e81123);
+    animation: pulse-red 1s ease-in-out infinite;
+}
+
+.timer-bar-track {
+    width: 100%;
+    height: 8px;
+    background: var(--si-border-light, #e0e0e0);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.timer-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s linear, background 0.5s;
+}
+
+.timer-green {
+    border-color: color-mix(in srgb, #28a745 40%, transparent);
+
+    .timer-bar-fill {
+        background: #28a745;
+    }
+
+    .timer-display {
+        color: #28a745;
+    }
+}
+
+.timer-yellow {
+    border-color: color-mix(in srgb, #ffc107 50%, transparent);
+    background: color-mix(in srgb, #ffc107 5%, var(--si-surface));
+
+    .timer-bar-fill {
+        background: #ffc107;
+    }
+
+    .timer-display {
+        color: #e6a700;
+    }
+}
+
+.timer-red {
+    border-color: color-mix(in srgb, #e81123 40%, transparent);
+    background: color-mix(in srgb, #e81123 5%, var(--si-surface));
+
+    .timer-bar-fill {
+        background: #e81123;
+    }
+
+    .timer-display {
+        color: #e81123;
+    }
+}
+
+@keyframes pulse-red {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
 }

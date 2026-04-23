@@ -1,11 +1,11 @@
 {
   "manifestVersion": 1,
   "id": "sprint-tracker",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "name": "Sprint Intelligence & Flow Optimizer",
   "description": "Unified sprint health dashboard with blocker detection, PR cycle tracking, risk scoring, workload balancing, and auto-generated sprint summaries.",
   "publisher": "Revanth",
-  "public": false,
+  "public": true,
   "categories": [
     "Azure Boards"
   ],

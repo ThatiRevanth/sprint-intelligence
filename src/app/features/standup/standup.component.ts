@@ -3,6 +3,8 @@ import {
   HostListener,
   OnInit,
   OnDestroy,
+  ViewChild,
+  AfterViewInit,
   signal,
   computed,
   effect,
@@ -54,18 +56,22 @@ import {
 } from "../../core/utils/grouping.utils";
 import { WorkItemGroupComponent } from "../../shared/work-item-group/work-item-group.component";
 import { InfoTooltipComponent } from "../../shared/info-tooltip/info-tooltip.component";
+import { ConfirmDialogComponent } from "../../shared/confirm-dialog/confirm-dialog.component";
 import { DatePipe } from "@angular/common";
+
+const STANDUP_DURATION_OPTIONS = [5, 10, 15, 20, 25, 30];
 
 const DOC_COLLECTION = "standup-team-groups";
 
 @Component({
   selector: "si-standup",
   standalone: true,
-  imports: [DatePipe, WorkItemGroupComponent, InfoTooltipComponent],
+  imports: [DatePipe, WorkItemGroupComponent, InfoTooltipComponent, ConfirmDialogComponent],
   template: require("./standup.component.html"),
   styles: [require("./standup.component.scss")],
 })
-export class StandupComponent implements OnInit, OnDestroy {
+export class StandupComponent implements OnInit, OnDestroy, AfterViewInit {
+  @ViewChild('exitDialog') exitDialogRef!: ConfirmDialogComponent;
   loading = signal(true);
   error = signal("");
   sprintName = signal("");
@@ -97,7 +103,48 @@ export class StandupComponent implements OnInit, OnDestroy {
   /** All org projects for the dropdown (excludes current project) */
   availableProjects = signal<{ id: string; name: string }[]>([]);
   /** Active config tab */
-  configTab = signal<"members" | "groups" | "mapping">("members");
+  configTab = signal<"members" | "groups" | "mapping" | "timer">("members");
+
+  /** Standup duration in minutes (persisted) */
+  standupDuration = signal(15);
+  readonly durationOptions = STANDUP_DURATION_OPTIONS;
+
+  /** Timer state */
+  timerRunning = signal(false);
+  timerElapsedMs = signal(0);
+  private timerInterval: ReturnType<typeof setInterval> | null = null;
+  private timerStartTime = 0;
+
+  /** Confirm dialog ref */
+  confirmDialog = signal<ConfirmDialogComponent | null>(null);
+
+  /** Timer display values (computed) */
+  timerTotalSeconds = computed(() => Math.floor(this.timerElapsedMs() / 1000));
+  timerRemainingSec = computed(() => {
+    const totalSec = this.standupDuration() * 60;
+    return totalSec - this.timerTotalSeconds();
+  });
+  timerDisplay = computed(() => {
+    const remaining = this.timerRemainingSec();
+    const abs = Math.abs(remaining);
+    const m = Math.floor(abs / 60);
+    const s = abs % 60;
+    const sign = remaining < 0 ? '-' : '';
+    return `${sign}${m}:${s.toString().padStart(2, '0')}`;
+  });
+  timerProgress = computed(() => {
+    const totalSec = this.standupDuration() * 60;
+    const elapsed = this.timerTotalSeconds();
+    return Math.max(1 - elapsed / totalSec, 0);
+  });
+  timerColor = computed(() => {
+    const remaining = this.timerRemainingSec();
+    const totalSec = this.standupDuration() * 60;
+    if (remaining <= 0) return 'red';
+    if (remaining <= 120) return 'red';
+    if (remaining <= totalSec / 2) return 'yellow';
+    return 'green';
+  });
 
   /** Derived: current member in presenter mode */
   currentMember = computed(() => {
@@ -133,8 +180,13 @@ export class StandupComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {}
 
+  ngAfterViewInit(): void {
+    this.confirmDialog.set(this.exitDialogRef);
+  }
+
   ngOnDestroy(): void {
     teamSelectorDisabled.set(false);
+    this.stopTimer();
   }
 
   refresh(): void {
@@ -299,6 +351,24 @@ export class StandupComponent implements OnInit, OnDestroy {
     this.presenterMode.set(true);
     this.currentIndex.set(0);
     teamSelectorDisabled.set(true);
+    this.startTimer();
+  }
+
+  private startTimer(): void {
+    this.timerElapsedMs.set(0);
+    this.timerStartTime = Date.now();
+    this.timerRunning.set(true);
+    this.timerInterval = setInterval(() => {
+      this.timerElapsedMs.set(Date.now() - this.timerStartTime);
+    }, 250);
+  }
+
+  private stopTimer(): void {
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
+    this.timerRunning.set(false);
   }
 
   /** Go to next team member */
@@ -319,6 +389,35 @@ export class StandupComponent implements OnInit, OnDestroy {
 
   /** Exit presenter mode */
   exitPresenter(): void {
+    const remaining = this.timerRemainingSec();
+    this.stopTimer();
+
+    let title: string;
+    let message: string;
+    if (remaining === 0) {
+      title = '🎯 Right on Time!';
+      message = `Standup completed exactly on the ${this.standupDuration()} minute mark. Perfect timing!`;
+    } else if (remaining > 0) {
+      const savedMin = Math.floor(remaining / 60);
+      const savedSec = remaining % 60;
+      title = '🎉 Standup Complete!';
+      message = `Great job! You finished ${savedMin > 0 ? savedMin + ' min ' : ''}${savedSec} sec early out of ${this.standupDuration()} minutes.`;
+    } else {
+      const overMin = Math.floor(Math.abs(remaining) / 60);
+      const overSec = Math.abs(remaining) % 60;
+      title = '⏰ Standup Overtime';
+      message = `Standup ran ${overMin > 0 ? overMin + ' min ' : ''}${overSec} sec over the ${this.standupDuration()} minute limit.`;
+    }
+
+    const dialog = this.confirmDialog();
+    if (dialog) {
+      dialog.open({
+        title,
+        message,
+        buttons: [{ label: 'OK', style: 'primary', action: () => {} }],
+      });
+    }
+
     this.presenterMode.set(false);
     this.currentIndex.set(-1);
     teamSelectorDisabled.set(false);
@@ -507,6 +606,9 @@ export class StandupComponent implements OnInit, OnDestroy {
       if (doc?.codeProjects) {
         this.codeProjectMappings.set(doc.codeProjects as string[]);
       }
+      if (doc?.standupDuration && typeof doc.standupDuration === 'number') {
+        this.standupDuration.set(doc.standupDuration);
+      }
       // Support new format (config) and legacy format (groups)
       if (doc?.config) {
         return new Map(
@@ -538,6 +640,7 @@ export class StandupComponent implements OnInit, OnDestroy {
       customGroups: this.customGroups(),
       groupOrder: this.groupOrder(),
       codeProjects: this.codeProjectMappings(),
+      standupDuration: this.standupDuration(),
     });
   }
 

@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "id": "sprint-tracker",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "name": "Sprint Intelligence & Flow Optimizer",
   "description": "Unified sprint health dashboard with blocker detection, PR cycle tracking, risk scoring, workload balancing, and auto-generated sprint summaries.",
   "publisher": "Revanth",

@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
+import { AngularWebpackPlugin } from '@ngtools/webpack';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -57,14 +58,20 @@ const webpack = (env, argv) => {
       rules: [
         {
           test: /\.ts$/,
-          use: 'ts-loader',
-          exclude: /node_modules/,
+          loader: '@ngtools/webpack',
         },
 
-        // Inline component templates
+        // Angular Linker for partially-compiled libraries (e.g. @angular/common)
         {
-          test: /\.component\.html$/,
-          type: 'asset/source',
+          test: /\.[cm]?js$/,
+          resolve: { fullySpecified: false },
+          use: {
+            loader: 'babel-loader',
+            options: {
+              compact: false,
+              plugins: ['@angular/compiler-cli/linker/babel'],
+            },
+          },
         },
 
         // Inline component styles
@@ -130,6 +137,10 @@ const webpack = (env, argv) => {
     },
 
     plugins: [
+      new AngularWebpackPlugin({
+        tsconfig: _resolve(__dirname, 'tsconfig.app.json'),
+      }),
+
       ...htmlPages,
 
       new MiniCssExtractPlugin({

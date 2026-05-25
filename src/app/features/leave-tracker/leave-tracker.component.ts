@@ -17,16 +17,19 @@ import { isWeekend } from '../../core/utils/date.utils';
 import { getTeamMembers } from '../../core/services/capacity.service';
 import { getSelectedTeamContext, teamSwitchCount } from '../../core/services/team-selection.service';
 import { loadTeamConfig, getVisibleMembers } from '../../core/services/team-config.service';
+import { getTeamIterations } from '../../core/services/iteration.service';
 import { InfoTooltipComponent } from '../../shared/info-tooltip/info-tooltip.component';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dialog.component';
+import { LeaveCalendarComponent } from './leave-calendar/leave-calendar.component';
 import { getCurrentUserDisplayName } from '../../core/services/azure-devops.service';
+import type { TeamSettingsIteration } from 'azure-devops-extension-api/Work';
 
 @Component({
   selector: 'si-leave-tracker',
   standalone: true,
-  imports: [DatePipe, InfoTooltipComponent, ConfirmDialogComponent],
-  template: require('./leave-tracker.component.html'),
-  styles: [require('./leave-tracker.component.scss')],
+  imports: [InfoTooltipComponent, ConfirmDialogComponent, LeaveCalendarComponent],
+  templateUrl: './leave-tracker.component.html',
+  styleUrls: ['./leave-tracker.component.scss'],
 })
 export class LeaveTrackerComponent implements OnInit {
   @ViewChild('confirmDialog') confirmDialog!: ConfirmDialogComponent;
@@ -38,15 +41,20 @@ export class LeaveTrackerComponent implements OnInit {
   currentUserName = signal('');
   searchQuery = signal('');
   memberImageMap = signal<Map<string, string>>(new Map());
+  iterations = signal<TeamSettingsIteration[]>([]);
+
+  /** View mode: 'leaves' | 'calendar' | 'holidays' */
+  viewMode = signal<'leaves' | 'calendar' | 'holidays'>('leaves');
 
   /** Leave form signals */
   selectedMember = signal('');
   leaveStart = signal('');
   leaveEnd = signal('');
   leaveNote = signal('');
+  leaveStartSession = signal<1 | 2>(1);
+  leaveEndSession = signal<1 | 2>(2);
 
   /** Holiday form signals */
-  holidayMode = signal(false);
   holidayDate = signal('');
   holidayName = signal('');
   holidayRegion = signal('');
@@ -87,6 +95,14 @@ export class LeaveTrackerComponent implements OnInit {
     return isWeekend(d);
   });
 
+  /** Invalid session: S2 → S1 on the same day */
+  isInvalidSession = computed(() => {
+    const start = this.leaveStart();
+    const end = this.leaveEnd() || start;
+    return start !== '' && start === end &&
+      this.leaveStartSession() === 2 && this.leaveEndSession() === 1;
+  });
+
   /** Summary stats */
   totalOnLeave = computed(() => {
     const today = new Date().toISOString().substring(0, 10);
@@ -125,12 +141,14 @@ export class LeaveTrackerComponent implements OnInit {
   async loadData(): Promise<void> {
     try {
       const teamContext = await getSelectedTeamContext();
-      const [cfg, rosterMembers, teamConfig, visibleSet] = await Promise.all([
+      const [cfg, rosterMembers, teamConfig, visibleSet, iters] = await Promise.all([
         loadLeaveConfig(),
         getTeamMembers(teamContext.team).catch(() => []),
         loadTeamConfig(),
         getVisibleMembers(),
+        getTeamIterations(teamContext).catch(() => []),
       ]);
+      this.iterations.set(iters);
 
       // Build image map from roster
       const imageMap = new Map<string, string>();
@@ -163,6 +181,16 @@ export class LeaveTrackerComponent implements OnInit {
 
   getLeaveDays(leave: LeaveEntry): number {
     return countBusinessDays(leave.startDate, leave.endDate, this.config().holidays);
+  }
+
+  getLeaveDisplay(leave: LeaveEntry): string {
+    const ss = leave.startSession ?? 1;
+    const es = leave.endSession ?? 2;
+    if (leave.startDate === leave.endDate) {
+      if (ss === 1 && es === 1) return 'First half (4h)';
+      if (ss === 2 && es === 2) return 'Second half (4h)';
+    }
+    return `${this.getLeaveDays(leave)}d`;
   }
 
   formatRange(leave: LeaveEntry): string {
@@ -204,6 +232,8 @@ export class LeaveTrackerComponent implements OnInit {
       endDate: end,
       days,
       note: this.leaveNote() || undefined,
+      startSession: this.leaveStartSession(),
+      endSession: this.leaveEndSession(),
     };
 
     const cfg = this.config();
@@ -218,6 +248,8 @@ export class LeaveTrackerComponent implements OnInit {
     this.leaveStart.set('');
     this.leaveEnd.set('');
     this.leaveNote.set('');
+    this.leaveStartSession.set(1);
+    this.leaveEndSession.set(2);
   }
 
   removeLeave(memberName: string, startDate: string): void {
@@ -243,9 +275,14 @@ export class LeaveTrackerComponent implements OnInit {
     });
   }
 
-  /** Holiday management */
+  /** View mode helpers */
+  showLeaves(): void { this.viewMode.set('leaves'); }
+  showCalendar(): void { this.viewMode.set('calendar'); }
+  showHolidays(): void { this.viewMode.set('holidays'); }
+
+  /** @deprecated kept for template back-nav compatibility */
   toggleHolidayMode(): void {
-    this.holidayMode.set(!this.holidayMode());
+    this.viewMode.set(this.viewMode() === 'holidays' ? 'leaves' : 'holidays');
   }
 
   async addRegion(): Promise<void> {

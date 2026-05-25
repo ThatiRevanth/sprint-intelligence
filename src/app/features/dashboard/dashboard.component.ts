@@ -7,11 +7,13 @@ import { WorkloadComponent } from '../workload/workload.component';
 import { SummaryComponent } from '../summary/summary.component';
 import { StandupComponent } from '../standup/standup.component';
 import { LeaveTrackerComponent } from '../leave-tracker/leave-tracker.component';
+import { SpilloverComponent } from '../spillover/spillover.component';
+import { ReleaseCycleComponent } from '../release-cycle/release-cycle.component';
 import { TeamSelectorComponent } from '../../shared/team-selector/team-selector.component';
 import { getExtensionDataManager } from '../../core/services/azure-devops.service';
 import { teamsReady } from '../../core/services/team-selection.service';
 
-type TabId = 'flow' | 'blockers' | 'pr' | 'risk' | 'workload' | 'summary' | 'standup' | 'leaves';
+type TabId = 'flow' | 'blockers' | 'pr' | 'risk' | 'workload' | 'summary' | 'standup' | 'leaves' | 'spillover' | 'release';
 
 interface Tab {
   id: TabId;
@@ -31,10 +33,12 @@ interface Tab {
     SummaryComponent,
     StandupComponent,
     LeaveTrackerComponent,
+    SpilloverComponent,
+    ReleaseCycleComponent,
     TeamSelectorComponent,
   ],
-  template: require('./dashboard.component.html'),
-  styles: [require('./dashboard.component.scss')],
+  templateUrl: './dashboard.component.html',
+  styleUrls: ['./dashboard.component.scss'],
 })
 export class DashboardComponent implements OnInit {
   activeTab = signal<TabId>('standup');
@@ -59,6 +63,8 @@ export class DashboardComponent implements OnInit {
     { id: 'workload', label: 'Workload', icon: '👥' },
     { id: 'summary', label: 'Sprint Summary', icon: '📝' },
     { id: 'leaves', label: 'Leave Tracker', icon: '🏖️' },
+    { id: 'spillover', label: 'Spill Overs', icon: '⚠️' },
+    { id: 'release', label: 'Release Cycle', icon: '🚀' },
   ];
 
   visibleTabs = computed(() =>

@@ -9,8 +9,8 @@ import { themeColors } from "../../core/utils/theme.utils";
 @Component({
   selector: "si-blockers-widget",
   standalone: true,
-  template: require('./blockers-widget.component.html'),
-  styles: [require('./blockers-widget.component.scss')],
+  templateUrl: './blockers-widget.component.html',
+  styleUrls: ['./blockers-widget.component.scss'],
 })
 export class BlockersWidgetComponent implements OnInit {
   loading = signal(true);

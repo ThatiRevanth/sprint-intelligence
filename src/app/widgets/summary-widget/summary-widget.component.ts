@@ -8,8 +8,8 @@ import { themeColors } from '../../core/utils/theme.utils';
 @Component({
   selector: 'si-summary-widget',
   standalone: true,
-  template: require('./summary-widget.component.html'),
-  styles: [require('./summary-widget.component.scss')],
+  templateUrl: './summary-widget.component.html',
+  styleUrls: ['./summary-widget.component.scss'],
 })
 export class SummaryWidgetComponent implements OnInit {
   loading = signal(true);

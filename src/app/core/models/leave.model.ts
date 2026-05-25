@@ -9,6 +9,10 @@ export interface LeaveEntry {
   days: number;
   /** Optional note */
   note?: string;
+  /** Session on the start date: 1 = first half (morning), 2 = second half (afternoon). Default 1. */
+  startSession?: 1 | 2;
+  /** Session on the end date: 1 = first half (morning), 2 = second half (afternoon). Default 2. */
+  endSession?: 1 | 2;
 }
 
 export interface PublicHoliday {

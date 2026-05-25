@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, effect } from '@angular/core';
+import { Component, OnInit, signal, effect, computed } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartData } from 'chart.js';
@@ -15,13 +15,21 @@ import { InfoTooltipComponent } from '../../shared/info-tooltip/info-tooltip.com
   selector: 'si-pr-tracker',
   standalone: true,
   imports: [DatePipe, BaseChartDirective, InfoTooltipComponent],
-  template: require('./pr-tracker.component.html'),
-  styles: [require('./pr-tracker.component.scss')],
+  templateUrl: './pr-tracker.component.html',
+  styleUrls: ['./pr-tracker.component.scss'],
 })
 export class PrTrackerComponent implements OnInit {
   loading = signal(true);
   error = signal('');
   prs = signal<PRMetrics[]>([]);
+  openPrs = computed(() => this.prs().filter(p => p.status === 'active'));
+  prFilter = signal<'all' | 'open' | 'completed'>('all');
+  filteredPrs = computed(() => {
+    const f = this.prFilter();
+    if (f === 'open') return this.prs().filter(p => p.status === 'active');
+    if (f === 'completed') return this.prs().filter(p => p.status === 'completed' || p.status === 'abandoned');
+    return this.prs();
+  });
   aggregate = signal<PRAggregate>({
     totalPRs: 0, completedPRs: 0, activePRs: 0, stuckPRs: 0,
     avgTimeToFirstReviewHours: 0, avgTimeToMergeHours: 0, avgReworkCount: 0,

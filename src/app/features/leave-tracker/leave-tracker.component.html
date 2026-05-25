@@ -5,7 +5,10 @@
         <h2>🏖️ Leave Tracker</h2>
         <si-info-tooltip text="Track team member leaves and public holidays. Leave days exclude weekends and configured public holidays. Add regions for multi-country teams."></si-info-tooltip>
         <div class="header-actions">
-            <button class="btn-secondary btn-sm" [class.active]="holidayMode()" (click)="toggleHolidayMode()">
+            <button class="btn-secondary btn-sm" [class.active]="viewMode() === 'calendar'" (click)="showCalendar()">
+                📅 Overview
+            </button>
+            <button class="btn-secondary btn-sm" [class.active]="viewMode() === 'holidays'" (click)="showHolidays()">
                 🌍 Public Holidays
             </button>
         </div>
@@ -15,11 +18,24 @@
     <div class="loading">Loading leave data...</div>
     } @else if (error()) {
     <div class="error">{{ error() }}</div>
-    } @else if (holidayMode()) {
+    } @else if (viewMode() === 'calendar') {
+    <!-- Calendar Overview -->
+    <div class="calendar-overview-content">
+        <div class="back-nav">
+            <button class="btn-secondary btn-sm" (click)="showLeaves()">← Back to Leaves</button>
+        </div>
+        <si-leave-calendar
+            [leaves]="config().leaves"
+            [holidays]="config().holidays"
+            [members]="memberLeaves()"
+            [iterations]="iterations()">
+        </si-leave-calendar>
+    </div>
+    } @else if (viewMode() === 'holidays') {
     <!-- Public Holidays Management -->
     <div class="holidays-content">
         <div class="back-nav">
-            <button class="btn-secondary btn-sm" (click)="toggleHolidayMode()">← Back to Leaves</button>
+            <button class="btn-secondary btn-sm" (click)="showLeaves()">← Back to Leaves</button>
         </div>
 
         <!-- Region management card -->
@@ -143,22 +159,39 @@
                 </div>
                 <label class="form-label">
                     <span>From</span>
-                    <input class="form-input" type="date" [min]="todayStr" [value]="leaveStart()"
-                        (input)="leaveStart.set($any($event.target).value)">
+                    <div class="date-session-pair">
+                        <input class="form-input" type="date" [min]="todayStr" [value]="leaveStart()"
+                            (input)="leaveStart.set($any($event.target).value)">
+                        <select class="form-select session-select" [value]="leaveStartSession()"
+                            (change)="leaveStartSession.set($any($event.target).value === '1' ? 1 : 2)">
+                            <option value="1">Session 1 (Morning)</option>
+                            <option value="2">Session 2 (Afternoon)</option>
+                        </select>
+                    </div>
                 </label>
                 <label class="form-label">
                     <span>To</span>
-                    <input class="form-input" type="date" [min]="leaveStart() || todayStr" [value]="leaveEnd()"
-                        (input)="leaveEnd.set($any($event.target).value)">
+                    <div class="date-session-pair">
+                        <input class="form-input" type="date" [min]="leaveStart() || todayStr" [value]="leaveEnd()"
+                            (input)="leaveEnd.set($any($event.target).value)">
+                        <select class="form-select session-select" [value]="leaveEndSession()"
+                            (change)="leaveEndSession.set($any($event.target).value === '1' ? 1 : 2)">
+                            <option value="1">Session 1 (Morning)</option>
+                            <option value="2">Session 2 (Afternoon)</option>
+                        </select>
+                    </div>
                 </label>
                 <input class="form-input note-input" type="text" placeholder="Note (optional)" [value]="leaveNote()"
                     (input)="leaveNote.set($any($event.target).value)" maxlength="60">
                 <button class="btn-primary btn-sm" (click)="addLeave()"
-                    [disabled]="!currentUserName() || !leaveStart() || isWeekendOnly()">
+                    [disabled]="!currentUserName() || !leaveStart() || isWeekendOnly() || isInvalidSession()">
                     + Add Leave
                 </button>
                 @if (isWeekendOnly()) {
                 <span class="weekend-hint">⚠ Selected date is a weekend</span>
+                }
+                @if (isInvalidSession()) {
+                <span class="weekend-hint">⚠ Second half → First half on same day is not valid</span>
                 }
             </div>
         </div>
@@ -212,7 +245,7 @@
                     <div class="leave-entry">
                         <div class="leave-entry-main">
                             <span class="leave-dates">📅 {{ formatRange(l) }}</span>
-                            <span class="leave-days">{{ getLeaveDays(l) }}d</span>
+                            <span class="leave-days">{{ getLeaveDisplay(l) }}</span>
                         </div>
                         @if (l.note) {
                         <span class="leave-note">{{ l.note }}</span>

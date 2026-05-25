@@ -2,7 +2,7 @@
 <div class="section-header">
     <h2>📞 Daily Standup</h2>
     <si-info-tooltip text="Team members grouped by role. Shows active work items per person with full Feature → PBI → Task hierarchy. Configure team groups and visibility via ⚙️ Teams."></si-info-tooltip>
-    <span class="sprint-badge">{{ sprintName() }}</span>
+    <si-sprint-selector (sprintChange)="onSprintChange($event)"></si-sprint-selector>
     <span class="date-badge">📅 {{ today() | date:'fullDate' }}</span>
     @if (timerRunning()) {
     <div class="standup-timer-inline" [class.timer-green]="timerColor() === 'green'" [class.timer-yellow]="timerColor() === 'yellow'" [class.timer-red]="timerColor() === 'red'">
@@ -16,7 +16,11 @@
     <div class="header-actions">
         @if (!loading() && presenterMode()) {
         <button class="refresh-btn" (click)="refreshInPlace()" title="Refresh data">↻ Refresh</button>
+        @if (standupStarted()) {
         <button class="btn-secondary btn-sm" (click)="exitPresenter()">✕ Exit Standup</button>
+        } @else {
+        <button class="btn-secondary btn-sm" (click)="exitBrowse()">✕ Exit</button>
+        }
         }
         @if (!loading() && !presenterMode()) {
         <button class="config-btn" (click)="toggleConfig()" title="Configure teams">⚙️ Configure</button>
@@ -123,8 +127,7 @@
         <p class="config-hint">If your repos/PRs live in a different Azure DevOps project, select it here so PR links point to the correct project.</p>
         <div class="code-project-list">
             @for (p of codeProjectMappings(); track p) {
-            <span class="code-project-tag">
-                Current Project has its code base in the Project 📁 {{ p }}
+            Current Project has its code base in the Project <span class="code-project-tag"> 📁 {{ p }}
                 <button class="remove-group-btn" (click)="removeCodeProject(p)" title="Remove project">✕</button>
             </span>
             }
@@ -137,10 +140,10 @@
                 <select class="form-select-sm" (change)="newCodeProject.set($any($event.target).value)">
                     <option value="" selected disabled>Select a project...</option>
                     @for (proj of availableProjects(); track proj.id) {
-                    <option [value]="proj.name" [disabled]="codeProjectMappings().includes(proj.name)">{{ proj.name }}</option>
+                        <option [value]="proj.name" [disabled]="codeProjectMappings().includes(proj.name)">{{ proj.name }}</option>
                     }
                 </select>
-                <button class="btn-secondary btn-sm" (click)="addCodeProject()" [disabled]="!newCodeProject()">+ Add</button>
+                <button class="btn-primary btn-sm" (click)="addCodeProject()" [disabled]="!newCodeProject()">+ Add</button>
             </div>
         }
     </div>
@@ -171,12 +174,14 @@
 } @else if (!presenterMode()) {
 <!-- Overview Mode: all members grouped -->
 <div class="overview-mode">
+    @if (isCurrentSprint()) {
     <div class="start-section">
         <button class="start-btn" (click)="startStandup()">
         ▶️ Start Daily
         </button>
         <span class="start-hint">{{ standupMembers().length }} team members</span>
     </div>
+    }
     <div class="team-overview">
         @for (group of groupOrder(); track group) {
         @if (getMembersInGroup(group).length > 0) {

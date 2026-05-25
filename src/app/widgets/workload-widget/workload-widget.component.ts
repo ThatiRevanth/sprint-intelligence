@@ -1,7 +1,6 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartData, ChartConfiguration } from 'chart.js';
-import { getLoadStatus, getLoadColor } from '../../core/models';
 import { getSprintWorkItems } from '../../core/services/work-item.service';
 import { buildTeamContext } from '../../core/services/iteration.service';
 import { getWorkClient } from '../../core/services/azure-devops.service';
@@ -10,8 +9,8 @@ import { getWorkClient } from '../../core/services/azure-devops.service';
   selector: 'si-workload-widget',
   standalone: true,
   imports: [BaseChartDirective],
-  template: require('./workload-widget.component.html'),
-  styles: [require('./workload-widget.component.scss')],
+  templateUrl: './workload-widget.component.html',
+  styleUrls: ['./workload-widget.component.scss'],
 })
 export class WorkloadWidgetComponent implements OnInit {
   loading = signal(true);
@@ -51,15 +50,18 @@ export class WorkloadWidgetComponent implements OnInit {
       const totalRemaining = counts.reduce((s, p) => s + p, 0);
       const avgRemaining = names.length > 0 ? totalRemaining / names.length : 1;
 
-      const statuses = counts.map(c => {
-        const load = avgRemaining > 0 ? c / avgRemaining : 0;
-        return getLoadStatus(load);
+      let overloadedCount = 0;
+      let lightCount = 0;
+      const colors = counts.map(c => {
+        const ratio = avgRemaining > 0 ? c / avgRemaining : 0;
+        if (ratio > 1.5) { overloadedCount++; return '#f44336'; }
+        if (ratio > 1.2) { overloadedCount++; return '#ff9800'; }
+        if (ratio < 0.5) { lightCount++; return '#2196f3'; }
+        return '#4caf50';
       });
 
-      const colors = statuses.map(s => getLoadColor(s));
-
-      this.overloaded.set(statuses.filter(s => s === 'overloaded' || s === 'heavy').length);
-      this.light.set(statuses.filter(s => s === 'light').length);
+      this.overloaded.set(overloadedCount);
+      this.light.set(lightCount);
 
       this.chartData.set({
         labels: names.map(n => n.split(' ')[0]),

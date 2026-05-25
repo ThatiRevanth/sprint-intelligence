@@ -88,7 +88,8 @@
 .dropdown-panel {
   position: absolute;
   top: calc(100% + 6px);
-  left: 0;
+  left: auto;
+  right: 0;
   min-width: 280px;
   max-width: 340px;
   background: var(--si-surface);

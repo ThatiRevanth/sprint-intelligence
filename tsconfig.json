@@ -14,13 +14,11 @@
     "sourceMap": true,
     "declaration": false,
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
     "resolveJsonModule": true,
     "importHelpers": true,
-    "baseUrl": "./",
     "paths": {
-      "@core/*": ["src/app/core/*"],
-      "@features/*": ["src/app/features/*"]
+      "@core/*": ["./src/app/core/*"],
+      "@features/*": ["./src/app/features/*"]
     }
   },
   "include": ["src/**/*.ts"],

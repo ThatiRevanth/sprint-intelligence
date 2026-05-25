@@ -22,6 +22,8 @@ import {
         </span>
         }@if (open()) {
           <div class="tooltip-popover"
+          [style.left]="tooltipAlign() === 'left' ? '0' : 'auto'"
+          [style.right]="tooltipAlign() === 'right' ? '0' : 'auto'"
           (click)="$event.stopPropagation()"
           (mouseenter)="onMouseEnter()"
           (mouseleave)="onMouseLeave()"><div class="tooltip-content">{{ text }}</div>
@@ -48,22 +50,25 @@ import {
             cursor: default;
         }
         .tooltip-popover {
-            position: absolute;
-            top: calc(100% + 6px);
-            left: 0;
-            z-index: 9999;
-            min-width: 280px;
-            max-width: 400px;
-            padding: 12px 16px;
-            background: var(--si-surface, #fff);
-            border: 1px solid var(--si-border, #e0e0e0);
-            border-radius: 8px;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
-            font-size: 13px;
-            line-height: 1.5;
-            color: var(--si-text-primary, #333);
-            white-space: normal;
-            animation: tooltipFadeIn 0.15s ease;
+          position: absolute;
+          top: calc(100% + 6px);
+          z-index: 9999;
+          min-width: 280px;
+          max-width: 400px;
+          padding: 12px 16px;
+          background: var(--si-surface, #fff);
+          border: 1px solid var(--si-border, #e0e0e0);
+          border-radius: 8px;
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+          font-size: 13px;
+          line-height: 1.5;
+          color: var(--si-text-primary, #333);
+          white-space: normal;
+          animation: tooltipFadeIn 0.15s ease;
+        }
+        .tooltip-popover.tooltip-above {
+          top: auto;
+          bottom: calc(100% + 6px);
         }
         @keyframes tooltipFadeIn {
             from {
@@ -85,13 +90,22 @@ export class InfoTooltipComponent {
   @Input() trigger: 'click' | 'hover' = 'click';
 
   open = signal(false);
+  tooltipAlign = signal<'left' | 'right'>('left');
 
   private readonly el = inject(ElementRef);
   private hoverTimeout: any;
 
+  /** Check if tooltip would overflow viewport and align accordingly */
+  private updateAlignment(): void {
+    const rect = this.el.nativeElement.getBoundingClientRect();
+    const spaceRight = window.innerWidth - rect.left;
+    this.tooltipAlign.set(spaceRight < 300 ? 'right' : 'left');
+  }
+
   toggle(event: Event): void {
     event.stopPropagation();
     if (this.trigger === 'click') {
+      if (!this.open()) this.updateAlignment();
       this.open.set(!this.open());
     }
   }
@@ -99,6 +113,7 @@ export class InfoTooltipComponent {
   onMouseEnter(): void {
     if (this.trigger === 'hover') {
       clearTimeout(this.hoverTimeout);
+      this.updateAlignment();
       this.open.set(true);
     }
   }

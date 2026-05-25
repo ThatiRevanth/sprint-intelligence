@@ -21,7 +21,8 @@
 /* ── Layout wrappers ─────────────────────── */
 
 .leave-content,
-.holidays-content {
+.holidays-content,
+.calendar-overview-content {
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -195,6 +196,20 @@
 .flex-input {
     flex: 1;
     min-width: 140px;
+}
+
+/* Date + session dropdown side by side inside a form-label */
+.date-session-pair {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.session-select {
+    min-width: 0;
+    width: 150px;
+    font-size: 12px;
+    padding: 7px 6px;
 }
 
 /* ── Member leave grid ────────────────────── */

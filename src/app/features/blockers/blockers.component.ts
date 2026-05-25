@@ -20,8 +20,8 @@ import { InfoTooltipComponent } from "../../shared/info-tooltip/info-tooltip.com
   selector: "si-blockers",
   standalone: true,
   imports: [WorkItemGroupComponent, InfoTooltipComponent],
-  template: require('./blockers.component.html'),
-  styles: [require('./blockers.component.scss')],
+  templateUrl: './blockers.component.html',
+  styleUrls: ['./blockers.component.scss'],
 })
 export class BlockersComponent implements OnInit {
   loading = signal(true);

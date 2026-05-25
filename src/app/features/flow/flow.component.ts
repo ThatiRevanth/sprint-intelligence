@@ -15,8 +15,8 @@ import { themeColors, stateColor } from '../../core/utils/theme.utils';
   selector: 'si-flow',
   standalone: true,
   imports: [BaseChartDirective, WorkItemGroupComponent, InfoTooltipComponent],
-  template: require('./flow.component.html'),
-  styles: [require('./flow.component.scss')],
+  templateUrl: './flow.component.html',
+  styleUrls: ['./flow.component.scss'],
 })
 export class FlowComponent implements OnInit {
   loading = signal(true);

@@ -77,3 +77,36 @@ export interface HierarchyNode {
   /** QA/testing sibling tasks under this parent (assigned to testers) */
   qaItems?: QaItem[];
 }
+
+/** A release epic parsed from the "Release YYYY.M.N" title convention. */
+export interface ReleaseEpic {
+  epicId: number;
+  title: string;
+  /** Shared grouping key e.g. "2026.3" */
+  majorGroup: string;
+  /** 0 = major release, >0 = patch */
+  patchNum: number;
+  releaseType: 'major' | 'patch';
+  state: string;
+  url: string;
+  createdDate: Date;
+  /** Null when release is still open */
+  closedDate: Date | null;
+  /** Microsoft.VSTS.Scheduling.TargetDate — null when not set on the epic */
+  targetDate: Date | null;
+  cycleTimeDays: number;
+  itemsTotal: number;
+  itemsDone: number;
+  storyPointsTotal: number;
+  storyPointsDone: number;
+  impedimentCount: number;
+  impedimentsDone: number;
+}
+
+/** A major release grouped with its associated patches. */
+export interface ReleaseGroup {
+  /** Grouping key e.g. "2026.3" */
+  majorGroup: string;
+  major: ReleaseEpic | null;
+  patches: ReleaseEpic[];
+}

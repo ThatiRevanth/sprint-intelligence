@@ -10,8 +10,8 @@ import { themeColors } from '../../core/utils/theme.utils';
   selector: 'si-risk-widget',
   standalone: true,
   imports: [BaseChartDirective],
-  template: require('./risk-widget.component.html'),
-  styles: [require('./risk-widget.component.scss')],
+  templateUrl: './risk-widget.component.html',
+  styleUrls: ['./risk-widget.component.scss'],
 })
 export class RiskWidgetComponent implements OnInit {
   loading = signal(true);

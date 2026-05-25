@@ -1,7 +1,6 @@
 import {
   Component,
   HostListener,
-  OnInit,
   OnDestroy,
   ViewChild,
   AfterViewInit,
@@ -24,9 +23,11 @@ import {
 } from "../../core/models";
 import {
   getSprintWorkItems,
+  getWorkItemsForIteration,
   enrichWithMissingParents,
   setCodeProjects,
 } from "../../core/services/work-item.service";
+import type { TeamSettingsIteration } from "azure-devops-extension-api/Work";
 import {
   getSelectedTeamContext,
   selectedTeam,
@@ -34,7 +35,7 @@ import {
   teamSelectorDisabled,
 } from "../../core/services/team-selection.service";
 import { clearSprintCache } from '../../core/services/sprint-data-cache.service';
-import { getSprintInfo } from "../../core/services/iteration.service";
+import { getSprintInfo, getCurrentIteration } from "../../core/services/iteration.service";
 import {
   getProjectContext,
   getExtensionDataManager,
@@ -57,6 +58,7 @@ import {
 import { WorkItemGroupComponent } from "../../shared/work-item-group/work-item-group.component";
 import { InfoTooltipComponent } from "../../shared/info-tooltip/info-tooltip.component";
 import { ConfirmDialogComponent } from "../../shared/confirm-dialog/confirm-dialog.component";
+import { SprintSelectorComponent } from "../../shared/sprint-selector/sprint-selector.component";
 import { DatePipe } from "@angular/common";
 
 const STANDUP_DURATION_OPTIONS = [5, 10, 15, 20, 25, 30];
@@ -66,16 +68,21 @@ const DOC_COLLECTION = "standup-team-groups";
 @Component({
   selector: "si-standup",
   standalone: true,
-  imports: [DatePipe, WorkItemGroupComponent, InfoTooltipComponent, ConfirmDialogComponent],
-  template: require("./standup.component.html"),
-  styles: [require("./standup.component.scss")],
+  imports: [DatePipe, WorkItemGroupComponent, InfoTooltipComponent, ConfirmDialogComponent, SprintSelectorComponent],
+  templateUrl: './standup.component.html',
+  styleUrls: ['./standup.component.scss'],
 })
-export class StandupComponent implements OnInit, OnDestroy, AfterViewInit {
+export class StandupComponent implements  OnDestroy, AfterViewInit {
   @ViewChild('exitDialog') exitDialogRef!: ConfirmDialogComponent;
   loading = signal(true);
   error = signal("");
   sprintName = signal("");
   today = signal(new Date());
+
+  /** Selected iteration from sprint selector */
+  private selectedIteration = signal<TeamSettingsIteration | null>(null);
+  /** Whether the selected sprint is the current active sprint */
+  isCurrentSprint = signal(true);
 
   /** Ordered list of all standup members (grouped by team) */
   standupMembers = signal<StandupMember[]>([]);
@@ -85,6 +92,9 @@ export class StandupComponent implements OnInit, OnDestroy, AfterViewInit {
 
   /** Whether we're in presenter (one-at-a-time) mode */
   presenterMode = signal(false);
+
+  /** Whether the standup was formally started via "Start Daily" (with timer) */
+  standupStarted = signal(false);
 
   /** For team config editing */
   configMode = signal(false);
@@ -173,12 +183,12 @@ export class StandupComponent implements OnInit, OnDestroy, AfterViewInit {
     return custom?.icon ?? DEFAULT_GROUP_ICON;
   }
 
-  private teamEffect = effect(() => {
-    teamSwitchCount();
-    this.refresh();
-  });
-
-  ngOnInit(): void {}
+  public constructor() {
+    effect(() => {
+      teamSwitchCount();
+      this.refresh();
+    });
+  }
 
   ngAfterViewInit(): void {
     this.confirmDialog.set(this.exitDialogRef);
@@ -193,8 +203,9 @@ export class StandupComponent implements OnInit, OnDestroy, AfterViewInit {
     this.loading.set(true);
     this.error.set("");
     this.presenterMode.set(false);
+    this.standupStarted.set(false);
     this.currentIndex.set(-1);
-    this.loadStandupData();
+    this.loadStandupData(this.selectedIteration());
   }
 
   forceRefresh(): void {
@@ -202,12 +213,34 @@ export class StandupComponent implements OnInit, OnDestroy, AfterViewInit {
     this.refresh();
   }
 
+  /** Called by sprint-selector when user picks a sprint */
+  onSprintChange(iteration: TeamSettingsIteration): void {
+    this.selectedIteration.set(iteration);
+    this.presenterMode.set(false);
+    this.standupStarted.set(false);
+    this.currentIndex.set(-1);
+    this.loading.set(true);
+    this.error.set("");
+    this.checkIfCurrentSprint(iteration);
+    this.loadStandupData(iteration);
+  }
+
+  private async checkIfCurrentSprint(iteration: TeamSettingsIteration): Promise<void> {
+    try {
+      const teamContext = await getSelectedTeamContext();
+      const current = await getCurrentIteration(teamContext);
+      this.isCurrentSprint.set(current?.id === iteration.id);
+    } catch {
+      this.isCurrentSprint.set(true);
+    }
+  }
+
   /** Refresh data while keeping presenter mode and current member */
   refreshInPlace(): void {
     const currentName = this.currentMember()?.name;
     this.loading.set(true);
     this.error.set("");
-    this.loadStandupData().then(() => {
+    this.loadStandupData(this.selectedIteration()).then(() => {
       if (currentName) {
         const idx = this.standupMembers().findIndex(
           (m) => m.name === currentName,
@@ -220,11 +253,11 @@ export class StandupComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-  private async loadStandupData(): Promise<void> {
+  private async loadStandupData(iteration?: TeamSettingsIteration | null): Promise<void> {
     try {
       const teamContext = await getSelectedTeamContext();
-      const sprintInfo = await getSprintInfo(teamContext);
-      this.sprintName.set(sprintInfo?.name ?? "Current Sprint");
+      const sprintName = iteration?.name ?? (await getSprintInfo(teamContext))?.name ?? "Current Sprint";
+      this.sprintName.set(sprintName);
 
       // Scope data document to project+team (sanitize for Extension Data Service:
       // IDs must be alphanumeric/dash/underscore and ≤50 chars)
@@ -237,8 +270,13 @@ export class StandupComponent implements OnInit, OnDestroy, AfterViewInit {
       const savedConfig = await this.loadTeamConfig();
       setCodeProjects(this.codeProjectMappings());
 
+      const areaPath = selectedTeam()?.areaPath;
+      const itemsPromise = iteration
+        ? getWorkItemsForIteration(iteration, areaPath)
+        : getSprintWorkItems(teamContext, areaPath);
+
       const [items, rosterMembers, leaveConfig] = await Promise.all([
-        getSprintWorkItems(teamContext, selectedTeam()?.areaPath),
+        itemsPromise,
         getTeamMembers(teamContext.team).catch(() => []),
         loadLeaveConfig().catch(
           () => ({ leaves: [], holidays: [], regions: [] }) as LeaveConfig,
@@ -349,6 +387,7 @@ export class StandupComponent implements OnInit, OnDestroy, AfterViewInit {
   /** Start presenter mode from the first person */
   startStandup(): void {
     this.presenterMode.set(true);
+    this.standupStarted.set(true);
     this.currentIndex.set(0);
     teamSelectorDisabled.set(true);
     this.startTimer();
@@ -419,6 +458,14 @@ export class StandupComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     this.presenterMode.set(false);
+    this.standupStarted.set(false);
+    this.currentIndex.set(-1);
+    teamSelectorDisabled.set(false);
+  }
+
+  /** Exit browse mode (no timer dialog) */
+  exitBrowse(): void {
+    this.presenterMode.set(false);
     this.currentIndex.set(-1);
     teamSelectorDisabled.set(false);
   }
@@ -443,7 +490,7 @@ export class StandupComponent implements OnInit, OnDestroy, AfterViewInit {
       event.preventDefault();
       this.prev();
     } else if (event.key === "Escape") {
-      this.exitPresenter();
+      this.standupStarted() ? this.exitPresenter() : this.exitBrowse();
     }
   }
 

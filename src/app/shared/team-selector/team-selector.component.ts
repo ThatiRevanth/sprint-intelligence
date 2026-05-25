@@ -20,8 +20,8 @@ import {
 @Component({
   selector: "si-team-selector",
   standalone: true,
-  template: require("./team-selector.component.html"),
-  styles: [require("./team-selector.component.scss")],
+  templateUrl: './team-selector.component.html',
+  styleUrls: ['./team-selector.component.scss'],
 })
 export class TeamSelectorComponent implements OnInit {
   teams = teams;

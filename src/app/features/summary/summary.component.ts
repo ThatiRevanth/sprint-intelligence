@@ -23,8 +23,8 @@ import { themeColors } from '../../core/utils/theme.utils';
   selector: 'si-summary',
   standalone: true,
   imports: [DatePipe, WorkItemGroupComponent, InfoTooltipComponent],
-  template: require('./summary.component.html'),
-  styles: [require('./summary.component.scss')],
+  templateUrl: './summary.component.html',
+  styleUrls: ['./summary.component.scss'],
 })
 export class SummaryComponent implements OnInit {
   loading = signal(true);

@@ -13,8 +13,8 @@ import { InfoModalComponent } from '../../shared/info-modal/info-modal.component
   selector: 'si-risk-score',
   standalone: true,
   imports: [BaseChartDirective, InfoTooltipComponent, InfoModalComponent],
-  template: require('./risk-score.component.html'),
-  styles: [require('./risk-score.component.scss')],
+  templateUrl: './risk-score.component.html',
+  styleUrls: ['./risk-score.component.scss'],
 })
 export class RiskScoreComponent implements OnInit {
   loading = signal(true);

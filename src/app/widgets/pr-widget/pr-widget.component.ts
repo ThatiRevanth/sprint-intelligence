@@ -7,8 +7,8 @@ import { themeColors } from '../../core/utils/theme.utils';
 @Component({
   selector: 'si-pr-widget',
   standalone: true,
-  template: require('./pr-widget.component.html'),
-  styles: [require('./pr-widget.component.scss')],
+  templateUrl: './pr-widget.component.html',
+  styleUrls: ['./pr-widget.component.scss'],
 })
 export class PrWidgetComponent implements OnInit {
   loading = signal(true);

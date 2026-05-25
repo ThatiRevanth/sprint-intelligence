@@ -14,8 +14,8 @@ interface FlatTreeRow {
   selector: "si-work-item-groups",
   standalone: true,
   imports: [InfoTooltipComponent],
-  template: require("./work-item-group.component.html"),
-  styles: [require("./work-item-group.component.scss")],
+  templateUrl: './work-item-group.component.html',
+  styleUrls: ['./work-item-group.component.scss'],
 })
 export class WorkItemGroupComponent implements OnChanges {
   @Input({ required: true }) groups: WorkItemGroup[] = [];

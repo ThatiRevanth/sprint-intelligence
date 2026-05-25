@@ -1,0 +1,42 @@
+<div class="sprint-selector" [class.open]="open()">
+    @if (loading()) {
+    <div class="sprint-trigger skeleton">
+        <span class="shimmer"></span>
+    </div>
+    } @else {
+    <button class="sprint-trigger" (click)="toggle()"
+        [title]="selectedIteration()?.name ?? 'Select sprint'">
+        <span class="sprint-icon">🏃</span>
+        <span class="sprint-name">{{ selectedIteration()?.name ?? 'No sprint' }}</span>
+        @if (isCurrentSprint()) {
+        <span class="current-badge">Current</span>
+        }
+        <span class="chevron" [class.flipped]="open()">▾</span>
+    </button>
+    }
+
+    @if (open()) {
+    <div class="dropdown-panel">
+        <div class="sprint-list">
+            @for (iter of iterations(); track iter.id) {
+            <button class="sprint-option" [class.active]="isSelected(iter)" (click)="pick(iter)">
+                <div class="option-info">
+                    <span class="option-name">
+                        {{ iter.name }}
+                        @if (isCurrent(iter)) {
+                        <span class="current-tag">(Current)</span>
+                        }
+                    </span>
+                    <span class="option-dates">{{ formatDateRange(iter) }}</span>
+                </div>
+                @if (isSelected(iter)) {
+                <span class="check-mark">✓</span>
+                }
+            </button>
+            } @empty {
+            <div class="no-results">No sprints found</div>
+            }
+        </div>
+    </div>
+    }
+</div>

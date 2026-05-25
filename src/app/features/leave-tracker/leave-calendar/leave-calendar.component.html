@@ -1,0 +1,247 @@
+<div class="cal-root">
+
+  <!-- ── Toolbar ─────────────────────────────────────────────────────────── -->
+  <div class="cal-toolbar">
+
+    <!-- Sub-view toggle -->
+    <div class="view-toggle">
+      <button class="toggle-btn" [class.active]="subView() === 'timeline'" (click)="setSubView('timeline')">
+        📊 Timeline
+      </button>
+      <button class="toggle-btn" [class.active]="subView() === 'monthly'" (click)="setSubView('monthly')">
+        📅 Monthly
+      </button>
+    </div>
+
+    <!-- Range presets -->
+    <div class="preset-group">
+      <button class="preset-btn" [class.active]="rangePreset() === 'current-sprint'" (click)="setPreset('current-sprint')">Current Sprint</button>
+      <button class="preset-btn" [class.active]="rangePreset() === 'next-sprint'" (click)="setPreset('next-sprint')">Next Sprint</button>
+      <button class="preset-btn" [class.active]="rangePreset() === 'next-2-sprints'" (click)="setPreset('next-2-sprints')">Next 2 Sprints</button>
+      <button class="preset-btn" [class.active]="rangePreset() === 'next-3-months'" (click)="setPreset('next-3-months')">Next 3 Months</button>
+      <button class="preset-btn" [class.active]="rangePreset() === 'custom'" (click)="setPreset('custom')">Custom</button>
+    </div>
+
+    <!-- Custom date pickers -->
+    @if (rangePreset() === 'custom') {
+    <div class="custom-range">
+      <input type="date" class="range-input" [value]="customStart()" (input)="customStart.set($any($event.target).value)">
+      <span class="range-sep">→</span>
+      <input type="date" class="range-input" [min]="customStart()" [value]="customEnd()" (input)="customEnd.set($any($event.target).value)">
+    </div>
+    }
+
+    <!-- Range label -->
+    <span class="range-label">{{ formatCustomRangeLabel() }}</span>
+
+    <!-- Spacer -->
+    <div class="toolbar-spacer"></div>
+
+    <!-- Timeline-specific controls -->
+    @if (subView() === 'timeline') {
+    <div class="timeline-controls">
+      <label class="toggle-switch" title="Show/hide weekend columns">
+        <input type="checkbox" [checked]="showWeekends()" (change)="toggleWeekends()">
+        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+        <span class="toggle-label">Weekends</span>
+      </label>
+      <div class="zoom-toggle">
+        <button class="toggle-btn sm" [class.active]="zoomLevel() === 'day'" (click)="zoomLevel.set('day')">Day</button>
+        <button class="toggle-btn sm" [class.active]="zoomLevel() === 'week'" (click)="zoomLevel.set('week')">Week</button>
+      </div>
+      <button class="icon-btn" (click)="jumpToToday()" title="Scroll to today">⟳ Today</button>
+    </div>
+    }
+
+  </div>
+
+  <!-- ── Timeline / Gantt view ───────────────────────────────────────────── -->
+  @if (subView() === 'timeline') {
+  <div class="timeline-wrapper" [class.zoom-week]="zoomLevel() === 'week'">
+
+    <!-- Sticky member column -->
+    <div class="members-col">
+      <!-- Header spacer rows -->
+      <div class="member-header-spacer month-row"></div>
+      <div class="member-header-spacer week-row"></div>
+      <div class="member-header-spacer day-row"></div>
+      <!-- Member rows -->
+      @for (row of calendarRows(); track row.name) {
+      <div class="member-label-cell">
+        @if (row.imageUrl) {
+        <img class="row-avatar img" [src]="row.imageUrl" [alt]="row.name">
+        } @else {
+        <span class="row-avatar initial">{{ memberInitial(row.name) }}</span>
+        }
+        <span class="row-name">{{ row.name }}</span>
+      </div>
+      }
+    </div>
+
+    <!-- Scrollable day grid -->
+    <div class="timeline-scroll" #timelineScroll>
+
+      @if (zoomLevel() === 'day') {
+      <!-- ── Day zoom ──────────────────────────────────── -->
+      <div class="day-grid" [style.grid-template-columns]="'repeat(' + calendarDays().length + ', minmax(var(--cell-w), 1fr))'">
+
+        <!-- Row 1: month labels (each div spans all columns of that month) -->
+        @for (span of calendarMonthSpans(); track span.label) {
+        <div class="hdr-month month-start" [style.grid-column]="'span ' + span.span">
+          {{ span.label }}
+        </div>
+        }
+
+        <!-- Row 2: week labels -->
+        @for (day of calendarDays(); track day.iso) {
+        <div class="hdr-week" [class.week-start]="!!day.weekLabel">
+          {{ day.weekLabel ?? '' }}
+        </div>
+        }
+
+        <!-- Row 3: day labels -->
+        @for (day of calendarDays(); track day.iso) {
+        <div class="hdr-day"
+          [class.today]="isToday(day.iso)"
+          [class.weekend]="day.isWeekend"
+          [class.has-holiday]="day.holidays.length > 0"
+          [title]="day.holidays.length > 0 ? dayHolidayTitle(day) : ''">
+          <span class="day-dow">{{ day.dayLabel }}</span>
+          <span class="day-num">{{ day.dayNum }}</span>
+          @if (day.holidays.length > 0) {
+          <span class="holiday-flag">🎌 {{ dayHolidayRegions(day) }}</span>
+          }
+        </div>
+        }
+
+        <!-- Member leave cells -->
+        @for (row of calendarRows(); track row.name) {
+          @for (day of calendarDays(); track day.iso) {
+          <div class="day-cell"
+            [class.leave-h8]="getLeaveHours(row, day.iso) === 8"
+            [class.leave-h4]="getLeaveHours(row, day.iso) === 4"
+            [class.today]="isToday(day.iso)"
+            [class.weekend]="day.isWeekend"
+            [class.has-holiday]="day.holidays.length > 0"
+            [attr.data-today]="isToday(day.iso) || null"
+            #todayCol>
+            @if (getLeaveHours(row, day.iso) === 4) {
+            <span class="leave-h-label">½</span>
+            }
+          </div>
+          }
+        }
+
+      </div>
+      } @else {
+      <!-- ── Week zoom ─────────────────────────────────── -->
+      <div class="week-grid" [style.grid-template-columns]="'repeat(' + calendarWeeks().length + ', minmax(var(--week-cell-w), 1fr))'">
+
+        <!-- Row 1: month labels (each div spans all columns of that month) -->
+        @for (span of calendarWeekMonthSpans(); track span.label) {
+        <div class="hdr-month month-start" [style.grid-column]="'span ' + span.span">
+          {{ span.label }}
+        </div>
+        }
+
+        <!-- Row 2: week labels -->
+        @for (bucket of calendarWeeks(); track bucket.weekLabel) {
+        <div class="hdr-week week-zoom"
+          [class.has-holiday]="bucket.hasHoliday"
+          [title]="bucket.hasHoliday ? 'Contains public holiday' : ''">
+          <span class="week-label-main">
+            {{ bucket.weekLabel }}
+            @if (bucket.hasHoliday) { <span class="holiday-flag">🎌</span> }
+          </span>
+          @if (bucket.hasHoliday) {
+          <span class="week-holiday-details">
+            @for (line of bucketHolidayLines(bucket); track line) {
+            <span class="week-holiday-line">{{ line }}</span>
+            }
+          </span>
+          }
+        </div>
+        }
+
+        <!-- Member leave cells -->
+        @for (row of calendarRows(); track row.name) {
+          @for (bucket of calendarWeeks(); track bucket.weekLabel) {
+          <div class="week-cell" [class.has-leave]="weekLeaveHours(row, bucket) > 0">
+            @if (weekLeaveHours(row, bucket) > 0) {
+            <div class="week-leave-bar" [style.width.%]="weekLeaveFraction(row, bucket) * 100"></div>
+            <span class="week-leave-label">{{ weekLeaveHours(row, bucket) }}h</span>
+            <span class="week-leave-days">{{ weekLeaveDayNames(row, bucket) }}</span>
+            }
+          </div>
+          }
+        }
+
+      </div>
+      }
+
+    </div><!-- /timeline-scroll -->
+  </div><!-- /timeline-wrapper -->
+  }
+
+  <!-- ── Monthly Calendar view ───────────────────────────────────────────── -->
+  @if (subView() === 'monthly') {
+  <div class="monthly-wrapper">
+
+    <!-- Month navigation -->
+    <div class="month-nav">
+      <button class="nav-btn" (click)="prevMonth()" [disabled]="!canGoToPrevMonth()">‹</button>
+      <span class="month-title">{{ visibleMonthLabel() }}</span>
+      <button class="nav-btn" (click)="nextMonth()" [disabled]="!canGoToNextMonth()">›</button>
+    </div>
+
+    <!-- Day-of-week headers -->
+    <div class="month-grid">
+      @for (dow of ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']; track dow) {
+      <div class="dow-header">{{ dow }}</div>
+      }
+
+      <!-- Day cells -->
+      @for (cell of visibleMonthCells(); track cell.iso) {
+      <div class="month-cell"
+        [class.out-of-month]="!cell.isCurrentMonth"
+        [class.out-of-range]="!cell.isInRange"
+        [class.today]="isToday(cell.iso)"
+        [class.weekend]="cell.isWeekend">
+
+        <div class="cell-top">
+          <span class="cell-day">{{ cell.dayNum }}</span>
+          @if (cell.holidays.length > 0) {
+          <span class="cell-holiday-label">{{ cell.holidays[0].name }}</span>
+          }
+        </div>
+
+        @if (cell.membersOnLeave.length > 0) {
+        <div class="cell-avatars">
+          @for (m of cell.membersOnLeave.slice(0, 4); track m.name) {
+            @if (m.imageUrl) {
+            <img class="cell-avatar img" [src]="m.imageUrl" [alt]="m.name" [title]="m.name">
+            } @else {
+            <span class="cell-avatar initial" [title]="m.name">{{ memberInitial(m.name) }}</span>
+            }
+          }
+          @if (cell.membersOnLeave.length > 4) {
+          <span class="cell-more">+{{ cell.membersOnLeave.length - 4 }}</span>
+          }
+        </div>
+        }
+
+      </div>
+      }
+    </div>
+
+    <!-- Legend -->
+    <div class="monthly-legend">
+      <span class="legend-item"><span class="legend-swatch leave"></span> On leave</span>
+      <span class="legend-item"><span class="legend-swatch holiday"></span> Public holiday</span>
+      <span class="legend-item"><span class="legend-swatch out-range"></span> Outside range</span>
+    </div>
+
+  </div>
+  }
+
+</div>

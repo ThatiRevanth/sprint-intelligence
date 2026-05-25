@@ -1,0 +1,44 @@
+<div class="spillover-container">
+  <div class="section-header">
+    <h2>⚠️ Spill Overs</h2>
+    <si-info-tooltip text="Shows unfinished Bugs, Stories and PBIs with no PR, along with their child tasks. Items grouped by type, sorted by age."></si-info-tooltip>
+    @if (!loading()) {
+      <button class="refresh-btn" (click)="forceRefresh()" title="Refresh data">↻ Refresh</button>
+    }
+  </div>
+  <p class="section-subtitle">
+    Active Bugs, Stories and PBIs that have no linked pull request —
+    these are at risk of not completing before the sprint ends.
+  </p>
+
+  @if (loading()) {
+    <div class="loading">Checking for spill over risks...</div>
+  } @else if (error()) {
+    <div class="error">{{ error() }}</div>
+  } @else if (spillGroups().length === 0) {
+    <div class="empty-state">
+      <div class="empty-icon">✅</div>
+      <div class="empty-text">All active work items have pull requests. No spill over risk detected.</div>
+    </div>
+  } @else {
+    <div class="spill-summary-bar">
+      @for (opt of typeOptions(); track opt.type) {
+        <button class="spill-type-chip" [class.active-filter]="typeFilter() === opt.type" (click)="toggleTypeFilter(opt.type)">
+          <span class="chip-count">{{ opt.count }}</span>
+          <span class="chip-label">{{ opt.label }}</span>
+        </button>
+      }
+      <button class="spill-type-chip total-chip" [class.active-filter]="typeFilter() === null" (click)="clearFilter()">
+        <span class="chip-count">{{ totalCount() }}</span>
+        <span class="chip-label">All</span>
+      </button>
+      @if (remainingDays() !== null) {
+        <span class="sprint-end-badge" [class.urgent]="remainingDays()! <= 3">
+          📅 Sprint ends in {{ remainingDays() }}d
+        </span>
+      }
+    </div>
+
+    <si-work-item-groups [groups]="filteredGroups()" [defaultCollapsed]="true"></si-work-item-groups>
+  }
+</div>

@@ -1,0 +1,85 @@
+<div class="release-cycle-container">
+  <div class="section-header">
+    <h2>🚀 Release Cycle</h2>
+    <si-info-tooltip text="Shows all project-wide release epics matching the 'Release YYYY.M.N' naming pattern. Major releases (N=0) and patches (N>0) are grouped by release series. Cycle time is calculated from epic creation to close date."></si-info-tooltip>
+    @if (!loading()) {
+      <button class="refresh-btn" (click)="forceRefresh()" title="Refresh data">↻ Refresh</button>
+    }
+  </div>
+
+  @if (loading()) {
+    <div class="loading">Loading release epics from project...</div>
+  } @else if (error()) {
+    <div class="error">{{ error() }}</div>
+  } @else if (groups().length === 0) {
+    <div class="empty-state">
+      <div class="empty-icon">📦</div>
+      <div class="empty-text">No release epics found. Create epics with titles matching "Release YYYY.M.N" to see them here.</div>
+    </div>
+  } @else {
+    <div class="release-groups">
+      @for (group of groups(); track group.majorGroup) {
+        <div class="release-group">
+          <button class="group-header" (click)="toggleGroup(group.majorGroup)" [class.expanded]="isExpanded(group.majorGroup)">
+            <span class="group-chevron">{{ isExpanded(group.majorGroup) ? '▾' : '▸' }}</span>
+            <span class="group-label">Release {{ group.majorGroup }}</span>
+            <span class="group-month">{{ monthLabel(group.majorGroup) }}</span>
+            <span class="group-stats">
+              {{ doneItems(group) }} / {{ totalItems(group) }} items
+            </span>
+            <span class="patch-count">
+              {{ group.patches.length }} patch{{ group.patches.length !== 1 ? 'es' : '' }}
+            </span>
+          </button>
+
+          @if (isExpanded(group.majorGroup)) {
+            <div class="group-body">
+              @if (group.major) {
+                <si-release-card
+                  [epicTitle]="group.major.title"
+                  [releaseType]="'major'"
+                  [majorGroup]="group.majorGroup"
+                  [state]="group.major.state"
+                  [cycleTimeDays]="group.major.cycleTimeDays"
+                  [itemsTotal]="group.major.itemsTotal"
+                  [itemsDone]="group.major.itemsDone"
+                  [storyPointsTotal]="group.major.storyPointsTotal"
+                  [storyPointsDone]="group.major.storyPointsDone"
+                  [impedimentCount]="group.major.impedimentCount"
+                  [impedimentsDone]="group.major.impedimentsDone"
+                  [patchCount]="group.patches.length"
+                  [fullCycleTimeDays]="fullCycleDays(group)"
+                  [closedDate]="group.major.closedDate"
+                  [targetDate]="group.major.targetDate"
+                  [epicUrl]="group.major.url">
+                </si-release-card>
+              }
+              @if (group.patches.length > 0) {
+                <div class="patches-list">
+                  @for (patch of group.patches; track patch.epicId) {
+                    <si-release-card
+                      [epicTitle]="patch.title"
+                      [releaseType]="'patch'"
+                      [majorGroup]="group.majorGroup"
+                      [state]="patch.state"
+                      [cycleTimeDays]="patch.cycleTimeDays"
+                      [itemsTotal]="patch.itemsTotal"
+                      [itemsDone]="patch.itemsDone"
+                      [storyPointsTotal]="patch.storyPointsTotal"
+                      [storyPointsDone]="patch.storyPointsDone"
+                      [impedimentCount]="patch.impedimentCount"
+                      [impedimentsDone]="patch.impedimentsDone"
+                      [closedDate]="patch.closedDate"
+                      [targetDate]="patch.targetDate"
+                      [epicUrl]="patch.url">
+                    </si-release-card>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

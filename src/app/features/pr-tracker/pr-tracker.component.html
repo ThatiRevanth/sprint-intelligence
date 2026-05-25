@@ -26,6 +26,10 @@
                 <div class="card-label">Total PRs</div>
             </div>
             <div class="card">
+                <div class="card-count">{{ aggregate().activePRs }}</div>
+                <div class="card-label">Open PRs</div>
+            </div>
+            <div class="card">
                 <div class="card-count">{{ aggregate().avgTimeToMergeHours }}h</div>
                 <div class="card-label">Avg Time to Merge</div>
             </div>
@@ -35,13 +39,54 @@
             </div>
             <div class="card stuck">
                 <div class="card-count">{{ aggregate().stuckPRs }}</div>
-                <div class="card-label">PRs Stuck > 2 Days</div>
+                <div class="card-label">Stuck > 2 Days</div>
             </div>
             <div class="card">
                 <div class="card-count">{{ aggregate().avgReworkCount }}</div>
                 <div class="card-label">Avg Rework Cycles</div>
             </div>
         </div>
+
+        @if (openPrs().length > 0) {
+        <div class="open-prs-section">
+            <h3>🔓 Open Pull Requests <span class="open-count-badge">{{ openPrs().length }}</span></h3>
+            <div class="open-pr-cards">
+                @for (pr of openPrs(); track pr.id) {
+                <div class="open-pr-card" [class.stuck-card]="pr.isStuck">
+                    <div class="open-pr-header">
+                        <div class="open-pr-title">
+                            @if (pr.url) {
+                            <a [href]="pr.url" target="_blank" rel="noopener noreferrer">{{ pr.title }}</a>
+                            } @else {
+                            {{ pr.title }}
+                            }
+                        </div>
+                        @if (pr.isStuck) {
+                        <span class="stuck-badge">⚠ Stuck</span>
+                        }
+                    </div>
+                    <div class="open-pr-meta">
+                        <span class="open-pr-repo">📁 {{ pr.repositoryName }}</span>
+                        <span class="open-pr-author">👤 {{ pr.authorName }}</span>
+                        <span class="open-pr-age">📅 {{ pr.creationDate | date:'shortDate' }}</span>
+                        @if (pr.reviewerNames.length > 0) {
+                        <span class="open-pr-reviewers">👁 {{ pr.reviewerNames.join(', ') }}</span>
+                        } @else {
+                        <span class="open-pr-no-reviewer">⏳ No reviewers yet</span>
+                        }
+                        @if (pr.tags.length > 0) {
+                        <span class="open-pr-tags">
+                            @for (tag of pr.tags; track tag) {
+                            <span class="tag">{{ tag }}</span>
+                            }
+                        </span>
+                        }
+                    </div>
+                </div>
+                }
+            </div>
+        </div>
+        }
 
         <div class="chart-section">
             <h3>Cycle Time Distribution (hours)</h3>
@@ -74,7 +119,14 @@
         </div>
 
         <div class="pr-table-section">
-            <h3>Pull Requests</h3>
+            <div class="pr-table-header">
+                <h3>Pull Requests</h3>
+                <div class="pr-filter-btns">
+                    <button class="filter-btn" [class.active]="prFilter() === 'all'" (click)="prFilter.set('all')">All ({{ prs().length }})</button>
+                    <button class="filter-btn" [class.active]="prFilter() === 'open'" (click)="prFilter.set('open')">Open ({{ openPrs().length }})</button>
+                    <button class="filter-btn" [class.active]="prFilter() === 'completed'" (click)="prFilter.set('completed')">Completed ({{ aggregate().completedPRs }})</button>
+                </div>
+            </div>
             <table class="pr-table">
                 <thead>
                     <tr>
@@ -89,7 +141,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @for (pr of prs(); track pr.id) {
+                    @for (pr of filteredPrs(); track pr.id) {
                     <tr [class.stuck]="pr.isStuck">
                         <td class="pr-title">
                             @if (pr.url) {

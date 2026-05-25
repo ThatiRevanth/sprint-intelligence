@@ -8,7 +8,7 @@ import type {
   Wiql,
   WorkItem,
 } from 'azure-devops-extension-api/WorkItemTracking';
-import { SprintWorkItem, AgingWorkItem, AgingSeverity, VelocityData, LinkedPr } from '../models';
+import { SprintWorkItem, AgingWorkItem, AgingSeverity, VelocityData, LinkedPr, ReleaseEpic, ReleaseGroup } from '../models';
 import { daysBetween } from '../utils/date.utils';
 import { getCurrentIteration } from './iteration.service';
 import type { TeamSettingsIteration } from 'azure-devops-extension-api/Work';
@@ -27,6 +27,55 @@ export async function getSprintWorkItems(
     ? `workitems:${teamContext.teamId}:${areaPath}`
     : `workitems:${teamContext.teamId}`;
   return cached(cacheKey, () => fetchSprintWorkItems(teamContext, areaPath));
+}
+
+/**
+ * Query work items for a specific iteration (sprint).
+ */
+export async function getWorkItemsForIteration(
+  iteration: TeamSettingsIteration,
+  areaPath?: string
+): Promise<SprintWorkItem[]> {
+  const cacheKey = areaPath
+    ? `workitems-iter:${iteration.id}:${areaPath}`
+    : `workitems-iter:${iteration.id}`;
+  return cached(cacheKey, () => fetchIterationWorkItems(iteration, areaPath));
+}
+
+async function fetchIterationWorkItems(
+  iteration: TeamSettingsIteration,
+  areaPath?: string
+): Promise<SprintWorkItem[]> {
+  const witClient = await getWorkItemTrackingClient();
+  const { projectName } = await getProjectContext();
+
+  const safeProject = projectName.replaceAll("'", "''");
+  const safePath = (iteration.path ?? '').replaceAll("'", "''");
+  const areaClause = areaPath
+    ? `AND [System.AreaPath] UNDER '${areaPath.replaceAll("'", "''")}'`
+    : '';
+
+  const wiql: Wiql = {
+    query: `
+      SELECT [System.Id]
+      FROM WorkItems
+      WHERE [System.TeamProject] = '${safeProject}'
+        AND [System.IterationPath] UNDER '${safePath}'
+        ${areaClause}
+        AND [System.WorkItemType] IN ('User Story', 'Bug', 'Task', 'Product Backlog Item', 'Impediment', 'Feature', 'Epic', 'QA', 'QA Task')
+      ORDER BY [System.State] ASC, [Microsoft.VSTS.Common.Priority] ASC
+    `,
+  };
+
+  const result = await witClient.queryByWiql(wiql, projectName);
+  if (!result.workItems || result.workItems.length === 0) return [];
+
+  const ids = result.workItems.map((wi) => wi.id);
+  const workItems = await fetchWorkItemsBatched(ids, projectName);
+
+  const items = workItems.map(mapToSprintWorkItem);
+  await resolveRepoNames(items);
+  return items;
 }
 
 async function fetchSprintWorkItems(
@@ -359,4 +408,153 @@ async function resolveRepoNames(items: SprintWorkItem[]): Promise<void> {
       }
     }
   }
+}
+
+/** Regex to detect Release YYYY.M.N epic titles */
+// Matches any title that starts with "Release" (case-insensitive) followed by optional
+// non-digit separators (space, dash, colon, etc.) then a version like YYYY.M.N
+const RELEASE_TITLE_RE = /^release\b[^0-9]*(\d{4}\.\d{1,2})\.(\d+)/i;
+
+/**
+ * Fetch all Epics and Impediments across the entire project (not scoped to a sprint).
+ * Groups them into ReleaseGroup[] based on the "Release YYYY.M.N" title convention.
+ * Epics not matching the convention are excluded.
+ */
+export async function getAllProjectReleaseGroups(): Promise<ReleaseGroup[]> {
+  const { projectName } = await getProjectContext();
+  return cached(`release-epics:${projectName}`, () => fetchAllProjectReleaseGroups(projectName));
+}
+
+async function fetchAllProjectReleaseGroups(projectName: string): Promise<ReleaseGroup[]> {
+  const witClient = await getWorkItemTrackingClient();
+  const safeProject = projectName.replaceAll("'", "''");
+
+  // Fetch all Epics in the project (no iteration filter)
+  const epicWiql: Wiql = {
+    query: `
+      SELECT [System.Id]
+      FROM WorkItems
+      WHERE [System.TeamProject] = '${safeProject}'
+        AND [System.WorkItemType] = 'Epic'
+      ORDER BY [System.CreatedDate] ASC
+    `,
+  };
+
+  const epicResult = await witClient.queryByWiql(epicWiql, projectName);
+  if (!epicResult.workItems || epicResult.workItems.length === 0) return [];
+
+  const epicIds = epicResult.workItems.map(w => w.id);
+  const epicWorkItems = await fetchWorkItemsBatched(epicIds, projectName);
+
+  // Filter to only matching release epics
+  const releaseEpics: ReleaseEpic[] = [];
+  const childIdsByEpic = new Map<number, number[]>(); // epicId → direct child IDs
+
+  for (const wi of epicWorkItems) {
+    const title: string = wi.fields?.['System.Title'] ?? '';
+    const match = RELEASE_TITLE_RE.exec(title);
+    if (!match) continue;
+
+    const majorGroup = match[1];
+    const patchNum = parseInt(match[2], 10);
+
+    // Collect child work item IDs from relations
+    const childIds: number[] = [];
+    if (wi.relations) {
+      for (const rel of wi.relations) {
+        if (rel.rel === 'System.LinkTypes.Hierarchy-Forward' && rel.url) {
+          const id = extractIdFromUrl(rel.url);
+          if (id) childIds.push(id);
+        }
+      }
+    }
+    childIdsByEpic.set(wi.id, childIds);
+
+    const now = new Date();
+    const state: string = wi.fields?.['System.State'] ?? '';
+    const createdRaw = wi.fields?.['System.CreatedDate'];
+    const createdDate = createdRaw ? new Date(createdRaw) : now;
+    const closedRaw = wi.fields?.['Microsoft.VSTS.Common.ClosedDate'] ?? wi.fields?.['System.ChangedDate'];
+    const isClosed = state === 'Done' || state === 'Closed';
+    const closedDate = isClosed && closedRaw ? new Date(closedRaw) : null;
+    const cycleTimeDays = daysBetween(createdDate, closedDate ?? now);
+    const targetRaw = wi.fields?.['Microsoft.VSTS.Scheduling.TargetDate'];
+    const targetDate = targetRaw ? new Date(targetRaw) : null;
+
+    releaseEpics.push({
+      epicId: wi.id,
+      title,
+      majorGroup,
+      patchNum,
+      releaseType: patchNum === 0 ? 'major' : 'patch',
+      state,
+      url: wi._links?.html?.href ?? '',
+      createdDate,
+      closedDate,
+      targetDate,
+      cycleTimeDays,
+      itemsTotal: 0,
+      itemsDone: 0,
+      storyPointsTotal: 0,
+      storyPointsDone: 0,
+      impedimentCount: 0,
+      impedimentsDone: 0,
+    });
+  }
+
+  if (releaseEpics.length === 0) return [];
+
+  // Fetch all child items for all release epics in one batched call
+  const allChildIds = [...new Set([...childIdsByEpic.values()].flat())];
+  const childItems = allChildIds.length > 0
+    ? await fetchWorkItemsBatched(allChildIds, projectName)
+    : [];
+
+  const childMap = new Map(childItems.map(w => [w.id, w]));
+
+  // Tally counts per epic
+  for (const epic of releaseEpics) {
+    const childIds = childIdsByEpic.get(epic.epicId) ?? [];
+    for (const childId of childIds) {
+      const child = childMap.get(childId);
+      if (!child) continue;
+      const childType: string = child.fields?.['System.WorkItemType'] ?? '';
+      const childState: string = child.fields?.['System.State'] ?? '';
+      const sp: number = child.fields?.['Microsoft.VSTS.Scheduling.StoryPoints'] ?? 0;
+
+      if (childType === 'Impediment') {
+        epic.impedimentCount++;
+        if (childState === 'Closed' || childState === 'Done' || childState === 'Resolved') {
+          epic.impedimentsDone++;
+        }
+      } else {
+        epic.itemsTotal++;
+        epic.storyPointsTotal += sp;
+        if (childState === 'Done' || childState === 'Closed') {
+          epic.itemsDone++;
+          epic.storyPointsDone += sp;
+        }
+      }
+    }
+  }
+
+  // Group into ReleaseGroup[]
+  const groupMap = new Map<string, ReleaseGroup>();
+  // Sort so major (patchNum=0) is processed before patches
+  releaseEpics.sort((a, b) => a.patchNum - b.patchNum);
+
+  for (const epic of releaseEpics) {
+    if (!groupMap.has(epic.majorGroup)) {
+      groupMap.set(epic.majorGroup, { majorGroup: epic.majorGroup, major: null, patches: [] });
+    }
+    const group = groupMap.get(epic.majorGroup)!;
+    if (epic.releaseType === 'major') {
+      group.major = epic;
+    } else {
+      group.patches.push(epic);
+    }
+  }
+
+  // Sort groups newest first (by majorGroup string desc)
+  return [...groupMap.values()].sort((a, b) => b.majorGroup.localeCompare(a.majorGroup));
 }

@@ -4,7 +4,7 @@
   "version": "1.0.4",
   "name": "Sprint Intelligence (DEV)",
   "description": "DEV build — Unified sprint health dashboard with blocker detection, PR cycle tracking, risk scoring, workload balancing, and auto-generated sprint summaries.",
-  "publisher": "RevanthThati",
+  "publisher": "Revanth",
   "public": false,
   "baseUri": "https://localhost:3000",
   "categories": [

@@ -425,7 +425,11 @@ export class LeaveCalendarComponent implements AfterViewChecked {
   }
 
   memberInitial(name: string): string {
-    return name.charAt(0).toUpperCase();
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      return (parts[0].charAt(0) + parts.at(-1)!.charAt(0)).toUpperCase();
+    }
+    return parts[0].substring(0, 2).toUpperCase();
   }
 
   /** Week zoom: leave fraction 0–1 based on total hours */

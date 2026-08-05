@@ -17,9 +17,9 @@
         @if (!loading() && presenterMode()) {
         <button class="refresh-btn" (click)="refreshInPlace()" title="Refresh data">↻ Refresh</button>
         @if (standupStarted()) {
-        <button class="btn-secondary btn-sm" (click)="exitPresenter()">✕ Exit Standup</button>
+        <button class="btn-danger btn-sm" (click)="exitPresenter()">✕ Exit Standup</button>
         } @else {
-        <button class="btn-secondary btn-sm" (click)="exitBrowse()">✕ Exit</button>
+        <button class="btn-danger btn-sm" (click)="exitBrowse()">✕ Exit</button>
         }
         }
         @if (!loading() && !presenterMode()) {
@@ -177,38 +177,59 @@
     @if (isCurrentSprint()) {
     <div class="start-section">
         <button class="start-btn" (click)="startStandup()">
-        ▶️ Start Daily
+        ▶ Start Daily
         </button>
-        <span class="start-hint">{{ standupMembers().length }} team members</span>
+        <div class="start-meta">
+            <span class="start-count">{{ standupMembers().length }} team members</span>
+        </div>
     </div>
     }
     <div class="team-overview">
         @for (group of groupOrder(); track group) {
         @if (getMembersInGroup(group).length > 0) {
         <div class="group-section">
-            <h3 class="group-header">{{ getGroupIcon(group) }} {{ getGroupLabel(group) }}</h3>
+            <div class="group-header-row">
+                <span class="group-header-label">{{ getGroupIcon(group) }} {{ getGroupLabel(group) }}</span>
+                <div class="group-header-chips">
+                    <span class="group-chip">{{ getMembersInGroup(group).length }} members</span>
+                    @if (getGroupActiveCount(group) > 0) {
+                    <span class="group-chip active-chip">{{ getGroupActiveCount(group) }} active</span>
+                    }
+                    @if (getGroupDoneCount(group) > 0) {
+                    <span class="group-chip done-chip">{{ getGroupDoneCount(group) }} done</span>
+                    }
+                </div>
+            </div>
             <div class="member-cards">
-                @for (m of getMembersInGroup(group); track m.name; let i = $index) {
-                <div class="member-card-mini" [class.on-leave]="isMemberOnLeave(m.name)" [class.on-holiday]="getMemberTodayHolidays(m.name).length > 0" (click)="goToMember(getMemberIndex(m.name))">
-                    <div class="member-name-mini">
-                        {{ m.name }}
-                        @if (isMemberOnLeave(m.name)) {
-                        <span class="leave-badge-mini">🏖️ {{ getLeaveStatus(m.name) }}</span>
-                        } @else if (getMemberTodayHolidays(m.name).length > 0) {
-                        <span class="holiday-badge-mini">🎉 {{ getMemberTodayHolidays(m.name)[0].name }}</span>
-                        } @else if (getNearLeaves(m.name).length > 0) {
-                        <span class="leave-upcoming-mini">🗓️ Leave: {{ formatLeave(getNearLeaves(m.name)[0]) }}</span>
-                        }
+                @for (m of getMembersInGroup(group); track m.name) {
+                <div class="member-card-mini"
+                    [class.on-leave]="isMemberOnLeave(m.name)"
+                    [class.on-holiday]="getMemberTodayHolidays(m.name).length > 0"
+                    [title]="m.name"
+                    (click)="goToMember(getMemberIndex(m.name))">
+                    <div class="card-body-mini">
+                        <div class="member-name-mini">
+                            <span class="member-name-text">{{ m.name }}</span>
+                            @if (isMemberOnLeave(m.name)) {
+                            <span class="leave-badge-mini">🏖️ {{ getLeaveStatus(m.name) }}</span>
+                            } @else if (getMemberTodayHolidays(m.name).length > 0) {
+                            <span class="holiday-badge-mini">🎉 {{ getMemberTodayHolidays(m.name)[0].name }}</span>
+                            } @else if (getNearLeaves(m.name).length > 0) {
+                            <span class="leave-upcoming-mini">🗓️ {{ formatLeave(getNearLeaves(m.name)[0]) }}</span>
+                            }
+                        </div>
+                        <div class="member-count-mini">
+                            @if (leafItemCount(m.allItems) - leafItemCount(m.activeItems) > 0) {
+                            <span class="completed-count-mini">{{ leafItemCount(m.allItems) - leafItemCount(m.activeItems) }} done</span>
+                            } @else if (leafItemCount(m.allItems) === 0) {
+                            <span class="no-items">no items</span>
+                            }
+                        </div>
+
                     </div>
-                    <div class="member-count-mini">
-                        @if (leafItemCount(m.activeItems) > 0) {
-                        {{ leafItemCount(m.activeItems) }} active item{{ leafItemCount(m.activeItems) > 1 ? 's' : '' }}
-                        } @else {
-                            <span class="no-items">No active items</span>
-                        }
-                        @if (leafItemCount(m.allItems) - leafItemCount(m.activeItems) > 0) {
-                        <span class="completed-count-mini">✅ {{ leafItemCount(m.allItems) - leafItemCount(m.activeItems) }} done</span>
-                        }
+                    <div class="card-stat-mini">
+                        <span class="stat-number" [class.stat-zero]="leafItemCount(m.activeItems) === 0">{{ leafItemCount(m.activeItems) }}</span>
+                        <span class="stat-label">active</span>
                     </div>
                 </div>
                 }
@@ -229,7 +250,7 @@
             <span class="progress-text">{{ progressText() }}</span>
             <div class="progress-dots">
                 @for (m of standupMembers(); track m.name; let i = $index) {
-                <span class="dot" [class.active]="i === currentIndex()" [class.visited]="i < currentIndex()" (click)="goToMember(i)" [title]="m.name">
+                <span class="dot" [class.active]="i === currentIndex()" [class.visited]="i < currentIndex()" [class.discussed]="isDiscussed(i)" (click)="goToMember(i)" [title]="m.name">
                 </span>
                 }
             </div>
@@ -251,10 +272,10 @@
     <div class="presenter-card">
         <div class="presenter-header">
             <div class="presenter-avatar">
-                @if (currentMember()!.imageUrl) {
-                <img [src]="currentMember()!.imageUrl" [alt]="currentMember()!.name" class="avatar-img" />
+                @if (currentMember()!.imageUrl && !avatarError()) {
+                <img [src]="currentMember()!.imageUrl" [alt]="currentMember()!.name" class="avatar-img" (error)="onAvatarError()" />
                 } @else {
-                {{ currentMember()!.name.charAt(0) }}
+                {{ avatarInitials() }}
                 }
             </div>
             <div class="presenter-info">
@@ -285,7 +306,7 @@
         </div>
         } @else {
         <div class="active-items">
-            <h4>Work Items ({{ leafItemCount(currentMember()!.activeItems) }} active)</h4>
+            <h4>Work Items <span class="wi-counter">{{ leafItemCount(currentMember()!.allItems) }} items · {{ leafItemCount(currentMember()!.activeItems) }} active · {{ leafItemCount(currentMember()!.allItems) - leafItemCount(currentMember()!.activeItems) }} done</span></h4>
             <si-work-item-groups [groups]="currentMember()!.itemGroups" [hierarchy]="currentMember()!.hierarchy"></si-work-item-groups>
         </div>
         }

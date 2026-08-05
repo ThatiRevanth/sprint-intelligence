@@ -1,10 +1,11 @@
 {
   "name": "sprint-intelligence",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Sprint Intelligence & Flow Optimizer - Azure DevOps Extension",
   "private": true,
   "scripts": {
     "start": "webpack serve --mode development --port 3000",
+    "dev:local": "webpack serve --config webpack.local.config.js --mode development",
     "build": "webpack --mode production",
     "build:dev": "webpack --mode development",
     "package": "node scripts/bump-version.js && npm run build && npx tfx extension create --manifest-globs vss-extension.json --output-path ./dist",

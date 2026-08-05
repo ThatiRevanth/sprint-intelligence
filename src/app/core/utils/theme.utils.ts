@@ -35,8 +35,8 @@ const SEMANTIC_STATE_COLORS: Record<string, string> = {
 function hashToUnit(str: string): number {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash);
-    hash |= 0;
+    hash = (str.codePointAt(i) ?? 0) + ((hash << 5) - hash);
+    hash = Math.trunc(hash);
   }
   return (((hash % 360) + 360) % 360) / 360;
 }
@@ -50,4 +50,30 @@ export function stateColor(state: string): string {
   if (SEMANTIC_STATE_COLORS[state]) return SEMANTIC_STATE_COLORS[state];
   const hue = Math.round(hashToUnit(state) * 360);
   return `hsl(${hue}, 65%, 45%)`;
+}
+
+/**
+ * Convert a solid color to a semi-transparent version for secondary badge / chart fills.
+ * Handles #rrggbb hex and hsl(…) strings produced by stateColor().
+ */
+export function withAlpha(color: string, alpha: number): string {
+  const hex6 = /^#([0-9a-f]{6})$/i.exec(color);
+  if (hex6) {
+    const r = Number.parseInt(hex6[1].slice(0, 2), 16);
+    const g = Number.parseInt(hex6[1].slice(2, 4), 16);
+    const b = Number.parseInt(hex6[1].slice(4, 6), 16);
+    return `rgba(${r},${g},${b},${alpha})`;
+  }
+  if (color.startsWith('hsl(')) {
+    return color.replace('hsl(', 'hsla(').replace(')', `,${alpha})`);
+  }
+  return color;
+}
+
+/**
+ * Light-tinted background color for a work item state (secondary badge style).
+ * Use alongside stateColor() as borderColor.
+ */
+export function stateColorLight(state: string): string {
+  return withAlpha(stateColor(state), 0.15);
 }

@@ -66,26 +66,45 @@
     margin-top: 4px;
 }
 
-.chart-section {
+.collapsible-section {
     background: var(--si-surface);
     border: 1px solid var(--si-border);
     border-radius: 8px;
-    padding: 16px;
     box-shadow: var(--si-shadow);
+    overflow: hidden;
+}
+
+.section-toggle-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--si-text-primary);
+    transition: background 0.15s;
+
+    &:hover {
+        background: var(--si-surface-secondary);
+    }
+
+    .pr-filter-btns {
+        margin-left: auto;
+    }
+}
+
+.section-body {
+    padding: 0 16px 16px;
 }
 
 .chart-wrapper {
     width: 100%;
     min-height: 300px;
-}
-
-.reviewer-section,
-.pr-table-section {
-    background: var(--si-surface);
-    border: 1px solid var(--si-border);
-    border-radius: 8px;
-    padding: 16px;
-    box-shadow: var(--si-shadow);
 }
 
 .reviewer-table,
@@ -177,8 +196,48 @@
     background: var(--si-surface);
     border: 1px solid var(--si-border);
     border-radius: 8px;
-    padding: 16px;
     box-shadow: var(--si-shadow);
+    overflow: hidden;
+}
+
+.open-prs-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    padding: 12px 16px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--si-text-primary);
+    transition: background 0.15s;
+
+    &:hover {
+        background: var(--si-surface-secondary);
+    }
+}
+
+.open-prs-title-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.collapse-chevron {
+    font-size: 18px;
+    color: var(--si-text-secondary);
+    transform: rotate(90deg);
+    transition: transform 0.2s ease;
+    line-height: 1;
+    flex-shrink: 0;
+
+    &.expanded {
+        transform: rotate(270deg);
+    }
 }
 
 .open-count-badge {
@@ -199,6 +258,7 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+    padding: 0 16px 16px;
     margin-top: 12px;
 }
 
@@ -268,17 +328,7 @@
     font-weight: 500;
 }
 
-/* -- PR Table header with filter ----------- */
-.pr-table-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin-bottom: 12px;
-
-    h3 { margin: 0; }
-}
+/* -- PR filter buttons -- */
 
 .pr-filter-btns {
     display: flex;

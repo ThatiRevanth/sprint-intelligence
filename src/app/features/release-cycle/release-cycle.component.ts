@@ -18,6 +18,7 @@ export class ReleaseCycleComponent implements OnInit {
   error = signal('');
   groups = signal<ReleaseGroup[]>([]);
   expandedGroups = signal<Set<string>>(new Set());
+  expandedPatchGroups = signal<Set<string>>(new Set());
 
   ngOnInit(): void {
     this.loadData();
@@ -26,6 +27,20 @@ export class ReleaseCycleComponent implements OnInit {
   forceRefresh(): void {
     clearSprintCache();
     this.loadData();
+  }
+
+  areGroupPatchesExpanded(majorGroup: string): boolean {
+    return this.expandedPatchGroups().has(majorGroup);
+  }
+
+  toggleGroupPatches(majorGroup: string): void {
+    const s = new Set(this.expandedPatchGroups());
+    if (s.has(majorGroup)) {
+      s.delete(majorGroup);
+    } else {
+      s.add(majorGroup);
+    }
+    this.expandedPatchGroups.set(s);
   }
 
   toggleGroup(majorGroup: string): void {
@@ -65,9 +80,9 @@ export class ReleaseCycleComponent implements OnInit {
 
   monthLabel(majorGroup: string): string {
     const [yearStr, monthStr] = majorGroup.split('.');
-    const year = parseInt(yearStr, 10);
-    const month = parseInt(monthStr, 10);
-    if (isNaN(year) || isNaN(month) || month < 1 || month > 12) return '';
+    const year = Number.parseInt(yearStr, 10);
+    const month = Number.parseInt(monthStr, 10);
+    if (Number.isNaN(year) || Number.isNaN(month) || month < 1 || month > 12) return '';
     return new Date(year, month - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   }
 

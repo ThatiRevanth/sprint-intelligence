@@ -42,7 +42,7 @@
   border: 1px solid var(--si-border);
   border-radius: 10px;
   overflow: hidden;
-  box-shadow: var(--si-shadow);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 .group-header {
@@ -69,10 +69,29 @@
 }
 
 .group-chevron {
-  font-size: 12px;
-  color: var(--si-text-secondary);
-  width: 12px;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+
+  &::before {
+    content: '';
+    display: block;
+    width: 6px;
+    height: 6px;
+    border-right: 2px solid var(--si-text-secondary);
+    border-bottom: 2px solid var(--si-text-secondary);
+    transform: rotate(-45deg);
+    transition: transform 0.2s ease, margin 0.2s ease;
+    margin-top: -3px;
+  }
+
+  &.open::before {
+    transform: rotate(45deg);
+    margin-top: 0;
+  }
 }
 
 .group-label {
@@ -84,23 +103,29 @@
 
 .group-month {
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--si-primary);
   opacity: 0.85;
 }
 
-.group-stats {
-  font-size: 12px;
-  color: var(--si-text-secondary);
+.group-summary {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
-.patch-count {
+.group-stat-chip {
   font-size: 11px;
+  font-weight: 600;
   padding: 2px 8px;
   border-radius: 10px;
   background: var(--si-surface);
   border: 1px solid var(--si-border);
   color: var(--si-text-secondary);
+
+  &.muted {
+    opacity: 0.65;
+  }
 }
 
 .group-body {
@@ -110,11 +135,44 @@
   gap: 10px;
 }
 
+.patches-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 4px;
+}
+
+.patches-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--si-text-secondary);
+  opacity: 0.7;
+}
+
+.expand-all-btn {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--si-primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-family: inherit;
+  transition: background 0.15s;
+
+  &:hover {
+    background: var(--si-primary-tint);
+  }
+}
+
 .patches-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding-left: 16px;
+  gap: 4px;
+  padding-left: 12px;
   border-left: 2px solid var(--si-border-light);
   margin-left: 4px;
 }

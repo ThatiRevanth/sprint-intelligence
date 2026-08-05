@@ -376,38 +376,38 @@
 
 /* ── Work Item Type Colors ───────── */
 .type-story {
-    background: #0078d4 !important;
-    color: #fff !important;
+    background: color-mix(in srgb, #0078d4 12%, transparent) !important;
+    color: #0078d4 !important;
 }
 
 .type-bug {
-    background: #cc2635 !important;
-    color: #fff !important;
+    background: color-mix(in srgb, #cc2635 14%, transparent) !important;
+    color: #cc2635 !important;
 }
 
 .type-impediment {
-    background: #e81123 !important;
-    color: #fff !important;
+    background: color-mix(in srgb, #e81123 12%, transparent) !important;
+    color: #c0392b !important;
 }
 
 .type-feature {
-    background: #773b93 !important;
-    color: #fff !important;
+    background: color-mix(in srgb, #773b93 12%, transparent) !important;
+    color: #773b93 !important;
 }
 
 .type-epic {
-    background: #e97e00 !important;
-    color: #fff !important;
+    background: color-mix(in srgb, #e97e00 12%, transparent) !important;
+    color: #b85c00 !important;
 }
 
 .type-task {
-    background: #c4a000 !important;
-    color: #fff !important;
+    background: color-mix(in srgb, #c4a000 12%, transparent) !important;
+    color: #8a7000 !important;
 }
 
 .type-qa {
-    background: #c2185b !important;
-    color: #fff !important;
+    background: color-mix(in srgb, #c2185b 12%, transparent) !important;
+    color: #c2185b !important;
 }
 
 /* ── Hierarchy Tree Mode ────────────── */

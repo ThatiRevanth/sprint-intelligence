@@ -265,18 +265,13 @@ $row-h: 38px;
   height: 24px;
   border-radius: 50%;
   flex-shrink: 0;
-
-  &.img { object-fit: cover; }
-
-  &.initial {
-    background: var(--si-primary-tint);
-    color: var(--si-primary);
-    font-size: 11px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+  background: var(--si-primary-tint);
+  color: var(--si-primary);
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .row-name {
@@ -675,18 +670,13 @@ $row-h: 38px;
   height: 20px;
   border-radius: 50%;
   flex-shrink: 0;
-
-  &.img { object-fit: cover; }
-
-  &.initial {
-    background: var(--si-primary);
-    color: var(--si-surface);
-    font-size: 9px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+  background: var(--si-primary);
+  color: var(--si-surface);
+  font-size: 9px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .cell-more {

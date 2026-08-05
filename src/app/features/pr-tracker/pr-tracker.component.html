@@ -49,7 +49,14 @@
 
         @if (openPrs().length > 0) {
         <div class="open-prs-section">
-            <h3>🔓 Open Pull Requests <span class="open-count-badge">{{ openPrs().length }}</span></h3>
+            <button class="open-prs-header" (click)="openPrsExpanded.set(!openPrsExpanded())">
+                <span class="collapse-chevron" [class.expanded]="openPrsExpanded()">›</span>
+                <span class="open-prs-title-row">
+                    <span>🔓 Open Pull Requests</span>
+                    <span class="open-count-badge">{{ openPrs().length }}</span>
+                </span>
+            </button>
+            @if (openPrsExpanded()) {
             <div class="open-pr-cards">
                 @for (pr of openPrs(); track pr.id) {
                 <div class="open-pr-card" [class.stuck-card]="pr.isStuck">
@@ -85,48 +92,66 @@
                 </div>
                 }
             </div>
+            }
         </div>
         }
 
-        <div class="chart-section">
-            <h3>Cycle Time Distribution (hours)</h3>
-            <div class="chart-wrapper">
-                <canvas baseChart [data]="cycleChartData()" [options]="cycleChartOptions" type="bar">
-                </canvas>
+        <div class="collapsible-section">
+            <button class="section-toggle-header" (click)="cycleChartExpanded.set(!cycleChartExpanded())">
+                <span class="collapse-chevron" [class.expanded]="cycleChartExpanded()">›</span>
+                <span>Cycle Time Distribution (hours)</span>
+            </button>
+            @if (cycleChartExpanded()) {
+            <div class="section-body">
+                <div class="chart-wrapper">
+                    <canvas baseChart [data]="cycleChartData()" [options]="cycleChartOptions" type="bar">
+                    </canvas>
+                </div>
             </div>
+            }
         </div>
 
-        <div class="reviewer-section">
-            <h3>Avg Review Time per Reviewer</h3>
-            <table class="reviewer-table">
-                <thead>
-                    <tr>
-                        <th>Reviewer</th>
-                        <th>Reviews</th>
-                        <th>Avg Time (h)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @for (r of reviewerStats(); track r.name) {
-                    <tr>
-                        <td class="reviewer-name">{{ r.name }}</td>
-                        <td>{{ r.reviewCount }}</td>
-                        <td>{{ r.avgReviewTimeHours }}h</td>
-                    </tr>
-                    }
-                </tbody>
-            </table>
+        <div class="collapsible-section">
+            <button class="section-toggle-header" (click)="reviewerExpanded.set(!reviewerExpanded())">
+                <span class="collapse-chevron" [class.expanded]="reviewerExpanded()">›</span>
+                <span>Avg Review Time per Reviewer</span>
+            </button>
+            @if (reviewerExpanded()) {
+            <div class="section-body">
+                <table class="reviewer-table">
+                    <thead>
+                        <tr>
+                            <th>Reviewer</th>
+                            <th>Reviews</th>
+                            <th>Avg Time (h)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (r of reviewerStats(); track r.name) {
+                        <tr>
+                            <td class="reviewer-name">{{ r.name }}</td>
+                            <td>{{ r.reviewCount }}</td>
+                            <td>{{ r.avgReviewTimeHours }}h</td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            }
         </div>
 
-        <div class="pr-table-section">
-            <div class="pr-table-header">
-                <h3>Pull Requests</h3>
-                <div class="pr-filter-btns">
+        <div class="collapsible-section">
+            <button class="section-toggle-header" (click)="prTableExpanded.set(!prTableExpanded())">
+                <span class="collapse-chevron" [class.expanded]="prTableExpanded()">›</span>
+                <span>Pull Requests</span>
+                <div class="pr-filter-btns" (click)="$event.stopPropagation()">
                     <button class="filter-btn" [class.active]="prFilter() === 'all'" (click)="prFilter.set('all')">All ({{ prs().length }})</button>
                     <button class="filter-btn" [class.active]="prFilter() === 'open'" (click)="prFilter.set('open')">Open ({{ openPrs().length }})</button>
                     <button class="filter-btn" [class.active]="prFilter() === 'completed'" (click)="prFilter.set('completed')">Completed ({{ aggregate().completedPRs }})</button>
                 </div>
-            </div>
+            </button>
+            @if (prTableExpanded()) {
+            <div class="section-body">
             <table class="pr-table">
                 <thead>
                     <tr>
@@ -171,6 +196,8 @@
                     }
                 </tbody>
             </table>
+            </div>
+            }
         </div>
     </div>
     }

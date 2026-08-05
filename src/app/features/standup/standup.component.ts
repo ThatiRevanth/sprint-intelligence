@@ -90,6 +90,12 @@ export class StandupComponent implements  OnDestroy, AfterViewInit {
   /** Current index in presenter mode */
   currentIndex = signal(-1);
 
+  /** Whether presenter avatar image failed to load */
+  avatarError = signal(false);
+
+  /** Set of member indices already discussed (marked when Next is clicked) */
+  discussedIndices = signal<Set<number>>(new Set());
+
   /** Whether we're in presenter (one-at-a-time) mode */
   presenterMode = signal(false);
 
@@ -389,6 +395,8 @@ export class StandupComponent implements  OnDestroy, AfterViewInit {
     this.presenterMode.set(true);
     this.standupStarted.set(true);
     this.currentIndex.set(0);
+    this.discussedIndices.set(new Set());
+    this.avatarError.set(false);
     teamSelectorDisabled.set(true);
     this.startTimer();
   }
@@ -410,10 +418,14 @@ export class StandupComponent implements  OnDestroy, AfterViewInit {
     this.timerRunning.set(false);
   }
 
-  /** Go to next team member */
+  /** Go to next team member, marking current as discussed */
   next(): void {
     const idx = this.currentIndex();
     if (idx < this.standupMembers().length - 1) {
+      const discussed = new Set(this.discussedIndices());
+      discussed.add(idx);
+      this.discussedIndices.set(discussed);
+      this.avatarError.set(false);
       this.currentIndex.set(idx + 1);
     }
   }
@@ -422,6 +434,7 @@ export class StandupComponent implements  OnDestroy, AfterViewInit {
   prev(): void {
     const idx = this.currentIndex();
     if (idx > 0) {
+      this.avatarError.set(false);
       this.currentIndex.set(idx - 1);
     }
   }
@@ -472,6 +485,7 @@ export class StandupComponent implements  OnDestroy, AfterViewInit {
 
   /** Jump to a specific member */
   goToMember(index: number): void {
+    this.avatarError.set(false);
     this.currentIndex.set(index);
     if (!this.presenterMode()) {
       this.presenterMode.set(true);
@@ -713,9 +727,50 @@ export class StandupComponent implements  OnDestroy, AfterViewInit {
     return this.standupMembers().findIndex((m) => m.name === name);
   }
 
+  /** Initials for any member name (used in overview cards) */
+  getMemberInitials(name: string): string {
+    const parts = name.trim().split(' ').filter(Boolean);
+    if (parts.length === 0) return '?';
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+    return (parts[0].charAt(0) + parts.at(-1)!.charAt(0)).toUpperCase();
+  }
+
+  /** Total active task count across all members in a group */
+  getGroupActiveCount(group: string): number {
+    return this.getMembersInGroup(group).reduce(
+      (sum, m) => sum + this.leafItemCount(m.activeItems), 0
+    );
+  }
+
+  /** Total done task count across all members in a group */
+  getGroupDoneCount(group: string): number {
+    return this.getMembersInGroup(group).reduce(
+      (sum, m) => sum + (this.leafItemCount(m.allItems) - this.leafItemCount(m.activeItems)), 0
+    );
+  }
+
   /** Count only Task items (the real work items people work on) */
   leafItemCount(items: SprintWorkItem[]): number {
     return items.filter((i) => i.workItemType === "Task").length;
+  }
+
+  /** Two-letter initials for the current member avatar fallback */
+  avatarInitials(): string {
+    const name = this.currentMember()?.name ?? '';
+    const parts = name.trim().split(' ').filter(Boolean);
+    if (parts.length === 0) return '?';
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+    return (parts[0].charAt(0) + parts.at(-1)!.charAt(0)).toUpperCase();
+  }
+
+  /** Called when the avatar <img> fires an error event */
+  onAvatarError(): void {
+    this.avatarError.set(true);
+  }
+
+  /** Whether a given member index has been marked discussed */
+  isDiscussed(index: number): boolean {
+    return this.discussedIndices().has(index);
   }
 
   /** Get upcoming leaves for a member */

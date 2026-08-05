@@ -9,7 +9,7 @@ import { getVisibleMembers } from '../../core/services/team-config.service';
 import { buildWorkItemGroups } from '../../core/utils/grouping.utils';
 import { WorkItemGroupComponent } from '../../shared/work-item-group/work-item-group.component';
 import { InfoTooltipComponent } from '../../shared/info-tooltip/info-tooltip.component';
-import { themeColors, stateColor } from '../../core/utils/theme.utils';
+import { stateColor, stateColorLight } from '../../core/utils/theme.utils';
 
 @Component({
   selector: 'si-flow',
@@ -106,7 +106,10 @@ export class FlowComponent implements OnInit {
       datasets: [
         {
           data: sorted.map((s) => s.count),
-          backgroundColor: sorted.map((s) => stateColor(s.state)),
+          backgroundColor: sorted.map((s) => stateColorLight(s.state)),
+          borderColor: sorted.map((s) => stateColor(s.state)),
+          borderWidth: 2,
+          borderRadius: 4,
           label: 'Work Items',
         },
       ],

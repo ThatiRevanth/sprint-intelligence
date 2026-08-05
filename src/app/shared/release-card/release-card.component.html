@@ -1,87 +1,130 @@
-<div class="release-card" [class.major-card]="releaseType === 'major'" [class.patch-card]="releaseType === 'patch'">
+<div class="rc-card" [class.rc-major]="releaseType === 'major'" [class.rc-patch]="releaseType === 'patch'">
 
-  <!-- Top row: type accent + title + state -->
-  <div class="rc-top">
-    <div class="rc-type-stripe" [class.major-stripe]="releaseType === 'major'" [class.patch-stripe]="releaseType === 'patch'">
-      <span class="rc-type-label">{{ releaseType === 'major' ? 'Major' : 'Patch' }}</span>
-    </div>
-    <div class="rc-title-area">
-      <div class="rc-title-row">
-        <a class="rc-title" [attr.href]="epicUrl || null" target="_blank" rel="noopener noreferrer">
-          {{ epicTitle }}
-        </a>
-        @if (monthYearLabel) {
-          <span class="rc-month-label">{{ monthYearLabel }}</span>
+  @if (compactMode && !isExpanded) {
+    <!-- Compact single-row for patch cards (collapsed) -->
+    <div class="rc-compact-row">
+      <!-- Full-row expand trigger (real button for accessibility) -->
+      <button class="rc-row-expand" (click)="isExpanded = true" aria-label="Expand patch details"></button>
+      <span class="rc-badge patch">Patch</span>
+      <a class="rc-title rc-compact-title" [attr.href]="epicUrl || null" target="_blank" rel="noopener noreferrer">
+        {{ epicTitle }}
+        @if (epicUrl) {
+          <svg class="rc-ext-icon" width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+            <path d="M2.5 9.5L9.5 2.5M5.5 2.5h4v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        }
+      </a>
+      <span class="rc-state-badge" [class.done]="isDone">{{ state }}</span>
+      @if (releasedOnLabel) {
+        <span class="rc-compact-meta">Released {{ releasedOnLabel }}</span>
+      }
+      <div class="rc-compact-stats">
+        @if (cycleTimeDays !== null) {
+          <span class="rc-inline-stat primary">{{ cycleTimeDays }}d</span>
+        }
+        @if (itemsTotal > 0) {
+          <span class="rc-inline-stat">{{ itemsDone }}/{{ itemsTotal }}</span>
+        }
+        @if (impedimentCount > 0) {
+          <span class="rc-inline-stat warn">{{ impedimentsDone }}/{{ impedimentCount }} impediments</span>
         }
       </div>
-      <div class="rc-meta-row">
-        <span class="rc-state-badge" [class.done]="state === 'Done' || state === 'Closed'">{{ state }}</span>
-        @if (releasedOnLabel) {
-          <span class="rc-released-on">Released {{ releasedOnLabel }}</span>
-        }
-        @if (targetDateLabel) {
-          <span class="rc-target-date">📅 Release date: {{ targetDateLabel }}</span>
-        }
-      </div>
+      <span class="rc-compact-chevron" aria-hidden="true">›</span>
     </div>
-  </div>
+  } @else {
+    <!-- Full card view -->
 
-  <!-- Stat pills -->
-  <div class="rc-pills">
-    @if (cycleTimeDays !== null) {
-      <div class="rc-pill cycle-pill">
-        <span class="pill-icon">⏱</span>
-        <div class="pill-body">
-          <span class="pill-value">{{ cycleTimeDays }}d</span>
-          <span class="pill-label">{{ state === 'Done' || state === 'Closed' ? 'cycle time' : 'in progress' }}</span>
+    <!-- Zone 1: Head — badge + title + metadata -->
+    <div class="rc-head">
+      <span class="rc-badge" [class.major]="releaseType === 'major'" [class.patch]="releaseType === 'patch'">
+        {{ releaseType === 'major' ? 'Major' : 'Patch' }}
+      </span>
+      <div class="rc-title-block">
+        <div class="rc-title-row">
+          <a class="rc-title" [attr.href]="epicUrl || null" target="_blank" rel="noopener noreferrer">
+            {{ epicTitle }}
+            @if (epicUrl) {
+              <svg class="rc-ext-icon" width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                <path d="M2.5 9.5L9.5 2.5M5.5 2.5h4v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            }
+          </a>
+          @if (monthYearLabel) {
+            <span class="rc-month-chip">{{ monthYearLabel }}</span>
+          }
+        </div>
+        <div class="rc-meta-row">
+          <span class="rc-state-badge" [class.done]="isDone">{{ state }}</span>
+          @if (releasedOnLabel) {
+            <span class="rc-meta-text">Released {{ releasedOnLabel }}</span>
+          }
+          @if (targetDateLabel) {
+            <span class="rc-meta-text target">📅 Release date: {{ targetDateLabel }}</span>
+          }
         </div>
       </div>
-    }
+      @if (compactMode && isExpanded) {
+        <button class="rc-collapse-btn" (click)="isExpanded = false" title="Collapse">‹</button>
+      }
+    </div>
+
+    <!-- Zone 2: Primary stats (max 3 key metrics) -->
+    <div class="rc-stats-row">
+      @if (cycleTimeDays !== null) {
+        <div class="rc-stat rc-stat-cycle">
+          <span class="stat-value">{{ cycleTimeDays }}d</span>
+          <span class="stat-label">{{ isDone ? 'Cycle Time' : 'In Progress' }}</span>
+        </div>
+      }
+      @if (itemsTotal > 0) {
+        <div class="rc-stat">
+          <span class="stat-value">{{ itemsDone }}<span class="stat-sub">/{{ itemsTotal }}</span></span>
+          <span class="stat-label">Items Done</span>
+        </div>
+      }
+      @if (impedimentCount > 0) {
+        <div class="rc-stat rc-stat-impediment">
+          <span class="stat-value">{{ impedimentsDone }}<span class="stat-sub">/{{ impedimentCount }}</span></span>
+          <span class="stat-label">Impediments</span>
+        </div>
+      }
+      @if (hasSecondaryStats) {
+        <button class="rc-details-toggle" (click)="showDetails = !showDetails">
+          {{ showDetails ? '‹ Less' : 'More ›' }}
+        </button>
+      }
+    </div>
+
+    <!-- Progress bar -->
     @if (itemsTotal > 0) {
-      <div class="rc-pill items-pill">
-        <span class="pill-icon">📋</span>
-        <div class="pill-body">
-          <span class="pill-value">{{ itemsDone }}<span class="pill-total"> / {{ itemsTotal }}</span></span>
-          <span class="pill-label">items done</span>
-        </div>
+      <div class="rc-progress-bar">
+        <div class="rc-progress-fill" [style.width.%]="progressPct"></div>
       </div>
     }
-    @if (storyPointsTotal > 0) {
-      <div class="rc-pill sp-pill">
-        <span class="pill-icon">⚡</span>
-        <div class="pill-body">
-          <span class="pill-value">{{ storyPointsDone }}<span class="pill-total"> / {{ storyPointsTotal }}</span></span>
-          <span class="pill-label">points done</span>
-        </div>
+
+    <!-- Zone 3: Secondary stats (collapsible) -->
+    @if (showDetails && hasSecondaryStats) {
+      <div class="rc-secondary-row">
+        @if (storyPointsTotal > 0) {
+          <div class="rc-sec-stat">
+            <span class="sec-value">{{ storyPointsDone }}/{{ storyPointsTotal }}</span>
+            <span class="sec-label">Points</span>
+          </div>
+        }
+        @if (patchCount !== null && releaseType === 'major') {
+          <div class="rc-sec-stat">
+            <span class="sec-value">{{ patchCount }}</span>
+            <span class="sec-label">Patches</span>
+          </div>
+        }
+        @if (fullCycleTimeDays !== null) {
+          <div class="rc-sec-stat">
+            <span class="sec-value">{{ fullCycleTimeDays }}d</span>
+            <span class="sec-label">Incl. Patches</span>
+          </div>
+        }
       </div>
     }
-    @if (impedimentCount > 0) {
-      <div class="rc-pill impediment-pill">
-        <span class="pill-icon">🚧</span>
-        <div class="pill-body">
-          <span class="pill-value">{{ impedimentsDone }}<span class="pill-total"> / {{ impedimentCount }}</span></span>
-          <span class="pill-label">impediments closed</span>
-        </div>
-      </div>
-    }
-    @if (patchCount !== null && releaseType === 'major') {
-      <div class="rc-pill patch-pill">
-        <span class="pill-icon">🔧</span>
-        <div class="pill-body">
-          <span class="pill-value">{{ patchCount }}</span>
-          <span class="pill-label">patch{{ patchCount !== 1 ? 'es' : '' }}</span>
-        </div>
-      </div>
-    }
-    @if (fullCycleTimeDays !== null) {
-      <div class="rc-pill full-cycle-pill">
-        <span class="pill-icon">📅</span>
-        <div class="pill-body">
-          <span class="pill-value">{{ fullCycleTimeDays }}d</span>
-          <span class="pill-label">incl. patches</span>
-        </div>
-      </div>
-    }
-  </div>
+  }
 
 </div>

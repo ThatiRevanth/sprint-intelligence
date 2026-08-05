@@ -8,7 +8,7 @@ import { getSprintInfo } from '../../core/services/iteration.service';
 import { getSelectedTeamContext, teamSwitchCount } from '../../core/services/team-selection.service';
 import { clearSprintCache } from '../../core/services/sprint-data-cache.service';
 import { getProjectContext, getOrganizationProjects, getExtensionDataManager } from '../../core/services/azure-devops.service';
-import { themeColors } from '../../core/utils/theme.utils';
+import { themeColors, withAlpha } from '../../core/utils/theme.utils';
 import { InfoTooltipComponent } from '../../shared/info-tooltip/info-tooltip.component';
 
 @Component({
@@ -37,6 +37,12 @@ export class PrTrackerComponent implements OnInit {
   });
   reviewerStats = signal<ReviewerStats[]>([]);
   cycleChartData = signal<ChartData<'bar'>>({ labels: [], datasets: [] });
+
+  /** Open PRs section is collapsed by default */
+  openPrsExpanded = signal(false);
+  cycleChartExpanded = signal(false);
+  reviewerExpanded = signal(false);
+  prTableExpanded = signal(false);
 
   projects = signal<{ id: string; name: string }[]>([]);
   currentProjectId = signal('');
@@ -155,13 +161,17 @@ export class PrTrackerComponent implements OnInit {
       .reverse();
     const labels = completed.map(p => `#${p.id}`);
     const data = completed.map(p => p.timeToMergeHours ?? 0);
-    const colors = data.map(h => this.getColor(h));
+    const bgColors = data.map(h => withAlpha(this.getColor(h), 0.15));
+    const borderColors = data.map(h => this.getColor(h));
 
     return {
       labels,
       datasets: [{
         data,
-        backgroundColor: colors,
+        backgroundColor: bgColors,
+        borderColor: borderColors,
+        borderWidth: 2,
+        borderRadius: 4,
         label: 'Hours to Merge',
       }],
     };

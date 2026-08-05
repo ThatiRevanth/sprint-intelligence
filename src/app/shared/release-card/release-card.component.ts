@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 
 @Component({
   selector: 'si-release-card',
@@ -6,7 +6,7 @@ import { Component, Input } from '@angular/core';
   templateUrl: './release-card.component.html',
   styleUrls: ['./release-card.component.scss'],
 })
-export class ReleaseCardComponent {
+export class ReleaseCardComponent implements OnChanges {
   @Input() epicTitle = '';
   @Input() releaseType: 'major' | 'patch' = 'major';
   @Input() state = '';
@@ -23,6 +23,28 @@ export class ReleaseCardComponent {
   @Input() fullCycleTimeDays: number | null = null;
   @Input() closedDate: Date | null = null;
   @Input() targetDate: Date | null = null;
+  /** When true the card renders as a compact single row; click to expand full view. */
+  @Input() compactMode = false;
+
+  isExpanded = false;
+  showDetails = false;
+
+  ngOnChanges(changes: SimpleChanges): void {
+    // When parent resets compactMode to true (e.g. "Collapse all"), fold the card back
+    if (changes['compactMode']?.currentValue === true) {
+      this.isExpanded = false;
+    }
+  }
+
+  get isDone(): boolean {
+    return this.state === 'Done' || this.state === 'Closed';
+  }
+
+  get hasSecondaryStats(): boolean {
+    return this.storyPointsTotal > 0 ||
+      (this.patchCount !== null && this.releaseType === 'major') ||
+      this.fullCycleTimeDays !== null;
+  }
 
   get targetDateLabel(): string {
     if (!this.targetDate) return '';
@@ -37,9 +59,9 @@ export class ReleaseCardComponent {
   get monthYearLabel(): string {
     if (!this.majorGroup) return '';
     const [yearStr, monthStr] = this.majorGroup.split('.');
-    const year = parseInt(yearStr, 10);
-    const month = parseInt(monthStr, 10);
-    if (isNaN(year) || isNaN(month) || month < 1 || month > 12) return '';
+    const year = Number.parseInt(yearStr, 10);
+    const month = Number.parseInt(monthStr, 10);
+    if (Number.isNaN(year) || Number.isNaN(month) || month < 1 || month > 12) return '';
     return new Date(year, month - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   }
 

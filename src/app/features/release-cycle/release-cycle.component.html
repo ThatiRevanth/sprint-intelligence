@@ -21,15 +21,15 @@
       @for (group of groups(); track group.majorGroup) {
         <div class="release-group">
           <button class="group-header" (click)="toggleGroup(group.majorGroup)" [class.expanded]="isExpanded(group.majorGroup)">
-            <span class="group-chevron">{{ isExpanded(group.majorGroup) ? '▾' : '▸' }}</span>
+            <span class="group-chevron" [class.open]="isExpanded(group.majorGroup)"></span>
             <span class="group-label">Release {{ group.majorGroup }}</span>
             <span class="group-month">{{ monthLabel(group.majorGroup) }}</span>
-            <span class="group-stats">
-              {{ doneItems(group) }} / {{ totalItems(group) }} items
-            </span>
-            <span class="patch-count">
-              {{ group.patches.length }} patch{{ group.patches.length !== 1 ? 'es' : '' }}
-            </span>
+            <div class="group-summary">
+              <span class="group-stat-chip">{{ doneItems(group) }}/{{ totalItems(group) }} items</span>
+              @if (group.patches.length > 0) {
+                <span class="group-stat-chip muted">{{ group.patches.length }} patch{{ group.patches.length !== 1 ? 'es' : '' }}</span>
+              }
+            </div>
           </button>
 
           @if (isExpanded(group.majorGroup)) {
@@ -55,12 +55,17 @@
                 </si-release-card>
               }
               @if (group.patches.length > 0) {
+                <div class="patches-header">
+                  <span class="patches-label">{{ group.patches.length }} Patch{{ group.patches.length !== 1 ? 'es' : '' }}</span>
+                  <button class="expand-all-btn" (click)="toggleGroupPatches(group.majorGroup)">
+                    {{ areGroupPatchesExpanded(group.majorGroup) ? 'Collapse all' : 'Expand all' }}
+                  </button>
+                </div>
                 <div class="patches-list">
                   @for (patch of group.patches; track patch.epicId) {
                     <si-release-card
                       [epicTitle]="patch.title"
                       [releaseType]="'patch'"
-                      [majorGroup]="group.majorGroup"
                       [state]="patch.state"
                       [cycleTimeDays]="patch.cycleTimeDays"
                       [itemsTotal]="patch.itemsTotal"
@@ -71,7 +76,8 @@
                       [impedimentsDone]="patch.impedimentsDone"
                       [closedDate]="patch.closedDate"
                       [targetDate]="patch.targetDate"
-                      [epicUrl]="patch.url">
+                      [epicUrl]="patch.url"
+                      [compactMode]="!areGroupPatchesExpanded(group.majorGroup)">
                     </si-release-card>
                   }
                 </div>
